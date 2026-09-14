@@ -27,7 +27,7 @@ BlindScrum keeps things minimal. You open the site, send a link, read or type th
 ## 3. Problems Solved
 
 1. **Anchoring bias:** When senior developers vote early or speak their number, others adjust downward or upward. BlindScrum hides card values until the host flips the table.
-2. **Database bloat:** Most estimation tools save old sessions in Postgres databases. BlindScrum keeps room state strictly in browser memory and WebSocket channels.
+2. **Database bloat:** Most estimation tools save old sessions in Postgres databases. BlindScrum keeps room state strictly in browser memory and direct WebRTC DataChannels.
 3. **Ceremony typing friction:** Leads spend meeting time switching tabs and typing out ticket summaries. The mic button lets them speak the title, which transcribes into the box live.
 4. **Queue interruption:** In standard tools, adding the next ticket forces the team to stop or wait. BlindScrum includes a slide-out queue so anyone can queue upcoming tickets during the vote.
 
@@ -90,8 +90,8 @@ BlindScrum keeps things minimal. You open the site, send a link, read or type th
 
 | Dimension         | Target                                                                                   |
 | :---------------- | :--------------------------------------------------------------------------------------- |
-| **Storage**       | Zero database storage. Rooms live in memory and WebSocket channels.                      |
-| **Realtime**      | WebSocket events broadcast in under 100ms.                                               |
+| **Storage**       | Zero database storage. Rooms live in memory and direct WebRTC DataChannels.              |
+| **Realtime**      | WebRTC DataChannel packet delivery in under 50ms peer-to-peer.                            |
 | **Accessibility** | Full keyboard support on card buttons, aria-pressed states, and 4.5:1 contrast.          |
 | **Deployment**    | Vercel (Native Next.js 16 App Router deployment).                                        |
 | **Assets**        | Zero external audio or image dependencies. Sounds and SVGs are generated in the browser. |

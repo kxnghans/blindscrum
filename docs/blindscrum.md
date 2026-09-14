@@ -19,7 +19,7 @@ BlindScrum is a Turborepo monorepo with a single web package:
 
 - **Start or Join:** Generates an alphanumeric room code (e.g. `SCRUM-492`) or accepts an existing code.
 - **Link Query Handling:** Uses Next.js `useSearchParams()` inside `<Suspense>` to check for `?room=CODE` or `?code=CODE`. If valid, it redirects straight into the room.
-- **Profile Setup:** Generates a default name and avatar on load. The user can change both before entering.
+- **Zero-Friction Landing:** Minimalist landing page with punchy tagline (*"Manage your stories. Estimate without bias."*) and feature highlights. Profile customization is cleanly deferred to the in-room onboarding modal.
 
 ### 2.2 Room Route (`apps/web/src/app/room/[code]/page.tsx`)
 
@@ -56,6 +56,7 @@ All clients listen on the `scrum_event` topic:
 | `REORDER_QUEUE`     | `{ queue }`                                               | An item is moved up in the queue list.                                   |
 | `NEXT_STORY`        | `{ nextStory, archivedEstimate }`                         | Host advances to the next queued item.                                   |
 | `THROW_REACTION`    | `{ id, senderId, senderName, targetId, type, timestamp }` | Teammate throws an interactive reaction (egg, tomato, gas, cheers, zap). |
+| `SYNC_REQUEST`      | `{ requesterId }`                                         | Newly connected peer requests full room state synchronization from host. |
 
 ---
 

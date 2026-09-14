@@ -76,3 +76,24 @@
   - Verified zero-backend P2P execution with WebRTC DataChannels and local BroadcastChannel fallback.
   - Linked GitHub repository `kxnghans/blindscrum` to Vercel continuous deployment.
   - Committed and pushed production build to `origin/main`.
+- [x] **Task 11: Landing Page UI Simplification & Subtitle Stripping**
+  - Updated headline to punchy phrasing: "Manage your stories. Estimate without bias."
+  - Removed hero subtitle paragraph.
+  - Removed subtitles from "Start a Room" and "Join a Room" action cards.
+  - Removed redundant "Joining as [Persona]" card from the landing page.
+  - Stripped body subtitles from feature cards ("No databases", "Voice mic input", "Story queue"), leaving minimalist title badges.
+- [ ] **Task 12: 3-Way System Theme Switcher (System / Light / Dark)**
+  - Update `ThemeToggle.tsx` with `Monitor`, `Sun`, and `Moon` icons.
+  - Support cyclic switching: `system` -> `light` -> `dark` -> `system`.
+  - Maintain SSR hydration safety and accurate tooltips/aria-labels.
+- [ ] **Task 13: Animation & Mobile Responsiveness Deep Polish**
+  - Polish keyframes in `globals.css` with GPU acceleration (`transform`, `opacity`, `will-change`).
+  - Optimize `PokerTable.tsx` for smaller screens ($\le 375\text{px}$) with responsive card and seat scaling.
+  - Optimize `FibonacciDeck.tsx` card wrapping and mobile touch targets.
+  - Ensure header and story pipeline fit smoothly without overflow on narrow screens.
+- [ ] **Task 14: Data Structures, Code Clean Up & Quality Verification**
+  - Clean up unused imports, dead handlers, and review data structures.
+  - Run `pnpm check-types`, `pnpm lint`, `pnpm test`, and `pnpm build`.
+- [ ] **Task 15: Production Deployment & Git Commit**
+  - Deploy to Vercel production.
+  - Commit and push to `origin/main`.

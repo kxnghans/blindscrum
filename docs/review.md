@@ -6,7 +6,7 @@ This document covers threat models, input sanitization, and data privacy safegua
 
 ## 1. Summary
 
-BlindScrum has a simple security model because it has no database. It does not store user passwords, emails, ticket names, or voting histories. State exists only in browser memory and temporary WebSocket channels while people are in the room.
+BlindScrum has a simple security model because it has no database. It does not store user passwords, emails, ticket names, or voting histories. State exists only in browser memory and temporary WebRTC DataChannels while people are in the room.
 
 ---
 
@@ -14,7 +14,7 @@ BlindScrum has a simple security model because it has no database. It does not s
 
 ### 2.1 Inspecting Network Frames (Anchoring Bias)
 
-- **Risk:** An engineer opens browser DevTools to read WebSocket messages and see how colleagues voted before casting their own vote.
+- **Risk:** An engineer opens browser DevTools to inspect WebRTC DataChannel frames and see how colleagues voted before casting their own vote.
 - **Defense:** During the voting round, the client only sends:
   ```json
   {

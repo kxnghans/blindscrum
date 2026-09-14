@@ -2,9 +2,8 @@
 
 /**
  * @file StoryPipeline.tsx
- * @description Integrated Story Pipeline providing an in-flow overview of what the team
- * is actively sizing, what is up next in the queue, the remaining backlog horizon,
- * and a universal quick-add input usable by any participant without opening the sidebar drawer.
+ * @description In-flow pipeline showing what the team is sizing, what is up next,
+ * and an inline queue input usable by any participant.
  */
 
 import { useState, useRef } from "react";

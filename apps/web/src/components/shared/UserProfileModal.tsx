@@ -2,7 +2,7 @@
 
 /**
  * @file UserProfileModal.tsx
- * @description Dialog allowing participants to customize their persona avatar,
+ * @description Dialog for participants to customize their persona avatar,
  * color palette, and display name with live interactive preview.
  */
 

@@ -7,18 +7,9 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
-import {
-  Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  Layers,
-  Edit2,
-} from "lucide-react";
+import { Sparkles, ArrowRight, ShieldCheck, Zap, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { UserProfileModal } from "@/components/shared/UserProfileModal";
 import {
   generateRoomCode,
   normalizeRoomCode,
@@ -32,11 +23,9 @@ function LandingContent() {
   const searchParams = useSearchParams();
 
   const [inputCode, setInputCode] = useState("");
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isCustomized, setIsCustomized] = useState(false);
 
-  // Default user setup
-  const [user, setUser] = useState<Participant>(() => {
+  // Default user setup for room bootstrapping
+  const [user] = useState<Participant>(() => {
     if (typeof window === "undefined") {
       return {
         id: "init",
@@ -76,9 +65,6 @@ function LandingContent() {
     const code = generateRoomCode();
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`blindscrum_user_${code}`, JSON.stringify(user));
-      if (isCustomized) {
-        sessionStorage.setItem(`blindscrum_configured_${code}`, "true");
-      }
     }
     router.push(`/room/${code}`);
   };
@@ -92,9 +78,6 @@ function LandingContent() {
     }
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`blindscrum_user_${clean}`, JSON.stringify(user));
-      if (isCustomized) {
-        sessionStorage.setItem(`blindscrum_configured_${clean}`, "true");
-      }
     }
     router.push(`/room/${clean}`);
   };
@@ -114,51 +97,12 @@ function LandingContent() {
 
       {/* Hero */}
       <div className="text-center max-w-2xl mx-auto mb-10">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-tight mb-4">
-          Point stories fast. <br className="hidden sm:inline" />
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
+          Manage your stories. <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-indigo-400 to-purple-500">
-            Without anchoring each other.
+            Estimate without bias.
           </span>
         </h1>
-
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
-          Share a link with your team. Speak or type the story title, vote in
-          secret, and reveal the breakdown together. No accounts, no database,
-          no setup.
-        </p>
-      </div>
-
-      {/* Identity preview */}
-      <div className="mb-8 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md flex items-center gap-3">
-        <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-indigo-500/20 shrink-0">
-          {user.avatar ? (
-            <Image
-              src={user.avatar}
-              alt={user.name}
-              fill
-              unoptimized
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-indigo-500" />
-          )}
-        </div>
-        <div className="text-left">
-          <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">
-            Joining as
-          </p>
-          <p className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
-            {user.name}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsProfileModalOpen(true)}
-          className="ml-2 p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-          title="Change name or avatar"
-        >
-          <Edit2 className="w-3.5 h-3.5" />
-        </button>
       </div>
 
       {/* Actions */}
@@ -169,11 +113,7 @@ function LandingContent() {
             <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
               <Zap className="w-5 h-5 text-indigo-200" />
             </div>
-            <h2 className="text-xl font-black mb-1">Start a Room</h2>
-            <p className="text-xs text-indigo-100/80 mb-6">
-              Create a fresh room and get a link. You control the active story
-              and when to flip the cards.
-            </p>
+            <h2 className="text-xl font-black mb-6">Start a Room</h2>
           </div>
 
           <button
@@ -192,13 +132,9 @@ function LandingContent() {
             <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-700 dark:text-slate-300">
               <Layers className="w-5 h-5 text-indigo-500" />
             </div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 mb-1">
+            <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 mb-6">
               Join a Room
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-              Have a code from your lead? Paste it here to drop straight into
-              the session.
-            </p>
           </div>
 
           <form onSubmit={handleJoinRoom} className="space-y-3">
@@ -220,64 +156,35 @@ function LandingContent() {
         </div>
       </div>
 
-      {/* Practical details */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl w-full text-left pt-6 border-t border-slate-200/60 dark:border-slate-800/60">
-        <div className="flex items-start gap-3">
+      {/* Practical details - minimalist badge highlights */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl w-full pt-6 border-t border-slate-200/60 dark:border-slate-800/60">
+        <div className="flex items-center justify-center sm:justify-start gap-2.5">
           <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 shrink-0">
             <ShieldCheck className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              No databases
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              State lives in browser memory. When the tab closes, the room is
-              gone.
-            </p>
-          </div>
+          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            No databases
+          </h3>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div className="flex items-center justify-center sm:justify-start gap-2.5">
           <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 shrink-0">
             <Zap className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Voice mic input
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Read ticket titles out loud. It transcribes live and stops when
-              you pause.
-            </p>
-          </div>
+          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            Voice mic input
+          </h3>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div className="flex items-center justify-center sm:justify-start gap-2.5">
           <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 shrink-0">
             <Layers className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Story queue
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Stack upcoming tickets in the drawer while the team is still
-              voting.
-            </p>
-          </div>
+          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            Story queue
+          </h3>
         </div>
       </div>
-
-      {/* Profile Modal */}
-      <UserProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        currentUser={user}
-        onSave={(newName, newAvatar) => {
-          setUser((prev) => ({ ...prev, name: newName, avatar: newAvatar }));
-          setIsCustomized(true);
-        }}
-      />
     </main>
   );
 }

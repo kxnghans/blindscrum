@@ -47,6 +47,11 @@ export default defineConfig({
 - **Normalization:** Verifies trimming, uppercase conversion, and removal of illegal characters.
 - **Length limits:** Ensures codes between 3 and 16 characters pass validation.
 
+### 2.4 WebRTC P2P Room Utilities (`apps/web/src/utils/p2p.test.ts`)
+
+- **SSR safety:** Returns `null` when invoked in Node.js server environments (`window === "undefined"`).
+- **Room normalization:** Normalizes room codes to lowercase alphanumeric-and-hyphen identifiers for Nostr room discovery.
+
 ---
 
 ## 3. Concurrency Checks
@@ -66,7 +71,7 @@ Before deploying, verify these multi-user interactions:
 
 | Command            | Action                   | Expected                            |
 | :----------------- | :----------------------- | :---------------------------------- |
-| `pnpm test`        | Run Vitest               | 10 tests passing across 3 files     |
+| `pnpm test`        | Run Vitest               | 13 tests passing across 4 files     |
 | `pnpm check-types` | TypeScript check         | 0 errors                            |
 | `pnpm lint`        | ESLint 9                 | 0 errors, 0 warnings                |
 | `pnpm build`       | Production Next.js build | Compiles cleanly for Vercel         |

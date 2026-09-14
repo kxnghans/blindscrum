@@ -34,7 +34,7 @@ All multi-client real-time synchronization happens directly peer-to-peer using *
 ### 2.3 Same-Device Offline Fallback
 
 - For local testing or offline environments on a single machine, the app runs an automatic native `BroadcastChannel("blindscrum_[CODE]")` alongside P2P.
-- Multiple browser tabs on the same laptop can estimate and vote seamlessly even with no active internet connection.
+- Multiple browser tabs on the same laptop can estimate and vote offline even with no active internet connection.
 
 ---
 
@@ -77,4 +77,4 @@ Because all estimation rooms, queue buffers, and votes live strictly in client m
    - Room codes are filtered to alphanumeric and hyphens (`[A-Z0-9-]`).
 3. **Zero Secret Keys:**
    - There are no database credentials, service role keys, or API tokens anywhere in the repository.
-   - The application runs 100% autonomously in the browser with zero external SaaS lock-in.
+   - The application runs 100% autonomously in the browser with no third-party vendor lock-in.

@@ -8,7 +8,7 @@ BlindScrum is a sprint estimation tool built on Next.js 16 (App Router), React 1
 
 ## What It Does
 
-- **In-Memory Rooms**: Rooms use clean alphanumeric codes (`SCRUM-492` or `BLND-92`). State stays in browser memory and WebSockets.
+- **In-Memory Rooms**: Rooms use clean alphanumeric codes (`SCRUM-492` or `BLND-92`). State stays in browser memory and WebRTC DataChannels.
 - **Direct Links**: Share links directly or pass a room code via URL (`?room=CODE` or `/room/[code]`).
 - **Story Pipeline**: See what you are sizing right now, what is up next, and the remaining backlog horizon. Anyone on the team can queue upcoming tickets inline without opening a sidebar.
 - **Voice Story Input**: Uses the browser Web Speech API. Tap the mic, read the ticket title out loud, and it writes it into the title box and stops when you pause.
@@ -86,7 +86,7 @@ blindscrum/
 │       │   │       ├── ThemeToggle.tsx    # Light/dark mode toggle
 │       │   │       └── UserProfileModal.tsx # Name, avatar presets, and randomizer dialog
 │       │   ├── hooks/
-│       │   │   ├── useScrumSession.ts     # Master ephemeral state machine & websocket sync
+│       │   │   ├── useScrumSession.ts     # Master ephemeral state machine & WebRTC P2P sync
 │       │   │   └── useVoiceSearch.ts      # W3C SpeechRecognition microphone hook
 │       │   ├── types/
 │       │   │   ├── scrum.ts               # Core domain models, card values, reaction types
@@ -135,7 +135,7 @@ Detailed technical references live in `/docs`:
 - [Architecture & Diagrams](./docs/architecture.md): Mermaid flows for real-time protocols, state transitions, and reaction pipelines.
 - [Product Requirements (PRD)](./docs/PRD.md): Problem breakdown, personas, and feature specs.
 - [System Blueprint](./docs/blindscrum.md): Routing, lifecycle, voice input, and estimation loops.
-- [Real-Time & Ephemeral Backend](./docs/backend.md): WebSocket channels, presence, Vercel deployment, and zero-persistence rules.
+- [Real-Time & Ephemeral Backend](./docs/backend.md): WebRTC DataChannels, peer presence, Vercel deployment, and zero-persistence rules.
 - [Visual Design & Theme](./docs/theme.md): Color tokens, typography, and 3D card transitions.
 - [Testing & Quality Assurance](./docs/testing.md): Vitest suites, concurrency scenarios, and verification steps.
 - [Browser Test Matrix](./docs/browser-test.md): Multi-iteration desktop, mobile, theme, and peer sync test log.
