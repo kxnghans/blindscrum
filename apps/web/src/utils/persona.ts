@@ -159,6 +159,15 @@ export const COLOR_PALETTES: ColorPalette[] = [
     highlight: "#f1f5f9",
     pill: "#334155",
   },
+  {
+    id: "white",
+    name: "White",
+    bg1: "#ffffff",
+    bg2: "#e2e8f0",
+    accent: "#0f172a",
+    highlight: "#cbd5e1",
+    pill: "#ffffff",
+  },
 ];
 
 /**
@@ -203,7 +212,7 @@ export function renderAvatarSvg(
         <polygon points="80,46 68,16 55,40" fill="${palette.bg2}" />
         <polygon points="75,42 67,23 59,38" fill="${palette.accent}" />
         <!-- Fox Face Plate -->
-        <path d="M22,48 C22,74 34,88 50,88 C66,88 78,74 78,48 C78,36 68,34 50,34 C32,34 22,36 22,48 Z" fill="#ffffff" />
+        <path d="M22,48 C22,74 34,88 50,88 C66,88 78,74 78,48 C78,36 68,34 50,34 C32,34 22,36 22,48 Z" fill="#ffffff" stroke="#94a3b8" stroke-opacity="0.3" stroke-width="0.8" />
         <!-- Cheek Fur & Muzzle -->
         <path d="M35,60 C42,56 58,56 65,60 C68,68 62,80 50,82 C38,80 32,68 35,60 Z" fill="${palette.highlight}" />
         <!-- Nose -->
@@ -288,7 +297,7 @@ export function renderAvatarSvg(
         <polygon points="78,42 72,14 56,32" fill="#ffffff" />
         <polygon points="74,38 70,20 60,32" fill="${palette.bg1}" />
         <!-- Head -->
-        <circle cx="50" cy="54" r="30" fill="#ffffff" />
+        <circle cx="50" cy="54" r="30" fill="#ffffff" stroke="#94a3b8" stroke-opacity="0.3" stroke-width="0.8" />
         <!-- Playful Cat Eyes -->
         <ellipse cx="38" cy="48" rx="4.5" ry="5.5" fill="${palette.bg2}" />
         <ellipse cx="38" cy="48" rx="1.5" ry="4" fill="#0f172a" />
@@ -312,7 +321,7 @@ export function renderAvatarSvg(
         <!-- Wizard Face -->
         <circle cx="50" cy="54" r="26" fill="#fed7aa" />
         <!-- Beard -->
-        <path d="M30,56 C30,76 40,88 50,90 C60,88 70,76 70,56 C64,60 56,62 50,62 C44,62 36,60 30,56 Z" fill="#ffffff" />
+        <path d="M30,56 C30,76 40,88 50,90 C60,88 70,76 70,56 C64,60 56,62 50,62 C44,62 36,60 30,56 Z" fill="#ffffff" stroke="#94a3b8" stroke-opacity="0.3" stroke-width="0.8" />
         <!-- Friendly Eyes & Brows -->
         <circle cx="41" cy="50" r="3" fill="#0f172a" />
         <circle cx="59" cy="50" r="3" fill="#0f172a" />
@@ -333,7 +342,7 @@ export function renderAvatarSvg(
         <circle cx="27" cy="28" r="12" fill="#0f172a" />
         <circle cx="73" cy="28" r="12" fill="#0f172a" />
         <!-- Face -->
-        <circle cx="50" cy="54" r="32" fill="#ffffff" />
+        <circle cx="50" cy="54" r="32" fill="#ffffff" stroke="#94a3b8" stroke-opacity="0.3" stroke-width="0.8" />
         <!-- Eye Patches -->
         <ellipse cx="37" cy="50" rx="9" ry="11" fill="#0f172a" transform="rotate(-15 37 50)" />
         <circle cx="38" cy="49" r="3.5" fill="#ffffff" />
@@ -354,7 +363,7 @@ export function renderAvatarSvg(
         <path d="M42,16 Q48,26 46,34 Q38,24 42,16 Z" fill="${palette.bg1}" />
         <path d="M58,16 Q52,26 54,34 Q62,24 58,16 Z" fill="${palette.bg1}" />
         <!-- Head -->
-        <path d="M28,42 C28,68 36,82 50,82 C64,82 72,68 72,42 C72,30 62,28 50,28 C38,28 28,30 28,42 Z" fill="#ffffff" />
+        <path d="M28,42 C28,68 36,82 50,82 C64,82 72,68 72,42 C72,30 62,28 50,28 C38,28 28,30 28,42 Z" fill="#ffffff" stroke="#94a3b8" stroke-opacity="0.3" stroke-width="0.8" />
         <!-- Falcon Plumage Mask -->
         <path d="M28,44 L44,48 L36,66 Z" fill="${palette.bg2}" />
         <path d="M72,44 L56,48 L64,66 Z" fill="${palette.bg2}" />
@@ -421,7 +430,7 @@ export function renderAvatarSvg(
   </defs>
   <!-- Background Card -->
   <rect width="100" height="100" rx="28" fill="url(#bg-${palette.id})" />
-  <rect width="96" height="96" x="2" y="2" rx="26" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5" />
+  <rect width="96" height="96" x="2" y="2" rx="26" fill="none" stroke="${palette.id === "white" ? "#94a3b8" : "#ffffff"}" stroke-opacity="${palette.id === "white" ? "0.35" : "0.18"}" stroke-width="1.5" />
   ${characterSvg}
 </svg>`.trim();
 

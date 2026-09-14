@@ -23,4 +23,23 @@ describe("persona utilities", () => {
     const avatarB = generateScrumAvatar("Test User 1");
     expect(avatarA).toBe(avatarB);
   });
+
+  it("should render all archetypes and color palettes including white correctly", async () => {
+    const { ARCHETYPES, COLOR_PALETTES, renderAvatarSvg } = await import(
+      "./persona"
+    );
+    expect(ARCHETYPES.length).toBe(10);
+    expect(COLOR_PALETTES.length).toBe(9);
+
+    const whitePalette = COLOR_PALETTES.find((p) => p.id === "white");
+    expect(whitePalette).toBeDefined();
+    expect(whitePalette?.name).toBe("White");
+
+    for (const arch of ARCHETYPES) {
+      const svg = renderAvatarSvg(arch.id, "white");
+      expect(svg.startsWith("data:image/svg+xml;utf8,")).toBe(true);
+      const decoded = decodeURIComponent(svg);
+      expect(decoded).toContain("bg-white");
+    }
+  });
 });

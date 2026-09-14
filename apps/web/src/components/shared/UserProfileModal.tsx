@@ -262,19 +262,20 @@ export function UserProfileModal({
             </div>
 
             {/* Horizontal Color Bar */}
-            <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-1.5">
+            <div className="p-2 px-3 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-1 sm:gap-1.5">
               {COLOR_PALETTES.map((palette) => {
                 const isSelected = selectedPalette === palette.id;
+                const isWhite = palette.id === "white";
 
                 return (
                   <button
                     key={palette.id}
                     type="button"
                     onClick={() => handleSelectPalette(palette.id)}
-                    className={`relative w-8 h-8 rounded-full transition-all flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                    className={`relative w-6 h-6 rounded-full transition-all flex items-center justify-center border border-black/10 dark:border-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                       isSelected
-                        ? "ring-2 ring-indigo-500 dark:ring-indigo-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 scale-110 shadow-md"
-                        : "hover:scale-105 opacity-90 hover:opacity-100"
+                        ? "ring-2 ring-indigo-500 dark:ring-indigo-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 scale-110 shadow-sm"
+                        : "hover:scale-110 opacity-90 hover:opacity-100"
                     }`}
                     style={{
                       background: `linear-gradient(135deg, ${palette.bg1}, ${palette.bg2})`,
@@ -283,7 +284,10 @@ export function UserProfileModal({
                     aria-label={`Select ${palette.name} color palette`}
                   >
                     {isSelected && (
-                      <Check className="w-4 h-4 text-white drop-shadow-sm" />
+                      <Check
+                        className={`w-3 h-3 ${isWhite ? "text-slate-900" : "text-white"} drop-shadow-xs`}
+                        strokeWidth={3}
+                      />
                     )}
                   </button>
                 );
