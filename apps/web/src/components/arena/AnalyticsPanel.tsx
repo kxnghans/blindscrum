@@ -38,6 +38,8 @@ export function AnalyticsPanel({
   const {
     average,
     mode,
+    modes,
+    isTie,
     modeCount,
     modePercentage,
     min,
@@ -52,7 +54,9 @@ export function AnalyticsPanel({
   const handleCopyMarkdown = async () => {
     const lines = [
       `### BlindScrum: ${storyTitle}`,
-      `- **Consensus**: ${mode ?? "N/A"} pts (${modeCount} votes, ${modePercentage}%)`,
+      isTie
+        ? `- **Tied Decision**: ${modes.join(" & ")} pts (${modeCount} votes each)`
+        : `- **Consensus**: ${mode ?? "N/A"} pts (${modeCount} votes, ${modePercentage}%)`,
       `- **Average**: ${average !== null ? `${average} pts` : "N/A"}`,
       `- **Spread**: ${min !== null && max !== null ? `${min} - ${max} pts (diff ${spread})` : "N/A"}`,
       `- **Votes**: ${analytics.totalVotes}`,
@@ -105,8 +109,16 @@ export function AnalyticsPanel({
           </button>
         </div>
 
-        {/* Consensus or divergence callout */}
-        {hasConsensus ? (
+        {/* Consensus, split tie, or divergence callout */}
+        {isTie ? (
+          <div className="my-5 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+            <span>
+              Split decision between <strong>{modes.join(" & ")} points</strong> (
+              {modeCount} votes each). Talk through differing assumptions before revoting.
+            </span>
+          </div>
+        ) : hasConsensus ? (
           <div className="my-5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-medium">
             <Award className="w-5 h-5 text-emerald-500 shrink-0" />
             <span>
@@ -132,13 +144,23 @@ export function AnalyticsPanel({
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Consensus Pick
+                {isTie
+                  ? "Tied Result"
+                  : hasConsensus
+                  ? "Consensus Pick"
+                  : "Majority Pick"}
               </p>
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">
-                {mode !== null ? `${mode} pts` : "N/A"}
+                {isTie
+                  ? `${modes.join(" & ")} pts`
+                  : mode !== null
+                  ? `${mode} pts`
+                  : "N/A"}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {modeCount} votes ({modePercentage}%)
+                {isTie
+                  ? `${modeCount} votes each`
+                  : `${modeCount} votes (${modePercentage}%)`}
               </p>
             </div>
           </div>
@@ -188,7 +210,9 @@ export function AnalyticsPanel({
 
           <div className="space-y-3">
             {distribution.map((dist) => {
-              const isModeOption = dist.value === mode;
+              const isModeOption = isTie
+                ? modes.includes(dist.value)
+                : dist.value === mode;
               const ratio = dist.count / maxBarCount;
 
               return (

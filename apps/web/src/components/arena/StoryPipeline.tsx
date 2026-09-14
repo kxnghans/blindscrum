@@ -131,6 +131,7 @@ export function StoryPipeline({
             <input
               ref={titleInputRef}
               type="text"
+              maxLength={140}
               value={currentInputValue}
               disabled={!isHost && !isEditingCurrent}
               onFocus={() => setIsEditingCurrent(true)}
@@ -192,6 +193,7 @@ export function StoryPipeline({
             <input
               type="text"
               name="quickQueue"
+              maxLength={140}
               value={quickQueueText}
               onChange={(e) => setQuickQueueText(e.target.value)}
               placeholder="Queue ticket for later..."

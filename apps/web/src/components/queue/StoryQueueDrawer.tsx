@@ -143,14 +143,17 @@ export function StoryQueueDrawer({
               Queue a Story
             </label>
             <div className="flex gap-2">
-              <input
-                id="queue-title-input"
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="e.g. Migrate Auth to OAuth2"
-                className="flex-1 px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <div className="flex-1 neumorphic-inset-well rounded-xl border border-slate-300/80 dark:border-slate-700/80 px-3 py-1.5 flex items-center transition-all focus-within:ring-2 focus-within:ring-indigo-500/50">
+                <input
+                  id="queue-title-input"
+                  type="text"
+                  maxLength={140}
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="e.g. Migrate Auth to OAuth2"
+                  className="w-full text-xs bg-transparent border-0 p-0 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                />
+              </div>
               <button
                 type="submit"
                 className="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"

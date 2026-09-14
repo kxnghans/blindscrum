@@ -101,6 +101,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   const p2pSessionRef = useRef<P2PSession | null>(null);
   const peerPersonasRef = useRef<Map<string, Participant>>(new Map());
   const lastSeenRef = useRef<Map<string, number>>(new Map());
+  const lastReactionTimeRef = useRef<number>(0);
 
   // Ref for latest state to respond to state-sync requests from new peers
   const stateRef = useRef({ storyTitle, status, queue, completedStories, participants });
@@ -269,9 +270,17 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
         case "ADD_QUEUE_ITEM":
           setQueue((prev) => {
-            if (prev.some((item) => item.id === event.payload.item.id))
+            if (
+              prev.length >= 50 ||
+              prev.some((item) => item.id === event.payload.item.id)
+            ) {
               return prev;
-            return [...prev, event.payload.item];
+            }
+            const sanitizedItem = {
+              ...event.payload.item,
+              title: event.payload.item.title.slice(0, 140),
+            };
+            return [...prev, sanitizedItem];
           });
           break;
 
@@ -596,7 +605,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         addedAt: Date.now(),
       };
 
-      setQueue((prev) => [...prev, newItem]);
+      setQueue((prev) => (prev.length >= 50 ? prev : [...prev, newItem]));
       broadcast({ type: "ADD_QUEUE_ITEM", payload: { item: newItem } });
     },
     [currentUser.name, broadcast],
@@ -685,6 +694,13 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
   const sendReaction = useCallback(
     (targetId: string, type: TableReactionType) => {
+      const now = Date.now();
+      // Throttle outgoing reaction spam to at most once every 250ms
+      if (now - lastReactionTimeRef.current < 250) {
+        return;
+      }
+      lastReactionTimeRef.current = now;
+
       const payload: TableReactionPayload = {
         id: `rx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         senderId: currentUser.id,

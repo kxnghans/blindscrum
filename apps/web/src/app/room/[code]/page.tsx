@@ -16,6 +16,7 @@ import { FibonacciDeck } from "@/components/arena/FibonacciDeck";
 import { AnalyticsPanel } from "@/components/arena/AnalyticsPanel";
 import { StoryQueueDrawer } from "@/components/queue/StoryQueueDrawer";
 import { useScrumSession } from "@/hooks/useScrumSession";
+import { useIsMounted } from "@/hooks/useIsMounted";
 import { normalizeRoomCode } from "@/utils/roomCode";
 
 interface RoomPageProps {
@@ -26,11 +27,16 @@ export default function RoomPage({ params }: RoomPageProps) {
   const resolvedParams = use(params);
   const roomCode = normalizeRoomCode(resolvedParams.code);
 
+  const mounted = useIsMounted();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !sessionStorage.getItem(`blindscrum_configured_${roomCode}`);
-  });
+  const [isOnboardingDismissed, setIsOnboardingDismissed] = useState(false);
+
+  const hasConfigured =
+    mounted &&
+    typeof window !== "undefined" &&
+    !!sessionStorage.getItem(`blindscrum_configured_${roomCode}`);
+
+  const isOnboardingOpen = mounted && !hasConfigured && !isOnboardingDismissed;
 
   const {
     currentUser,
@@ -52,15 +58,26 @@ export default function RoomPage({ params }: RoomPageProps) {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`blindscrum_configured_${roomCode}`, "true");
     }
-    setIsOnboardingOpen(false);
+    setIsOnboardingDismissed(true);
   };
 
   const handleDismissOnboarding = () => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`blindscrum_configured_${roomCode}`, "true");
     }
-    setIsOnboardingOpen(false);
+    setIsOnboardingDismissed(true);
   };
+
+  if (!mounted) {
+    return (
+      <div className="flex-1 flex flex-col min-h-screen bg-[var(--bg-app)] text-[var(--text-main)] transition-colors">
+        <header className="sticky top-0 z-30 w-full border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md h-14 sm:h-16" />
+        <main className="flex-1 max-w-7xl mx-auto w-full py-6 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[var(--bg-app)] text-[var(--text-main)] transition-colors">

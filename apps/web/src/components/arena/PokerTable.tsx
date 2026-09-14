@@ -366,11 +366,19 @@ export function PokerTable({
             const isTargeted = participantReactions.length > 0;
             const isPickerOpen = activePickerTargetId === participant.id;
 
-            const isModeVote =
+            const isTiedVote =
               participant.vote !== null &&
+              analytics.isTie &&
+              analytics.modes.includes(participant.vote);
+
+            const isSingleClearMajority =
+              participant.vote !== null &&
+              !analytics.isTie &&
               analytics.mode !== null &&
               participant.vote === analytics.mode;
-            const isConsensusWinner = isModeVote && analytics.hasConsensus;
+
+            const isConsensusWinner =
+              isSingleClearMajority && analytics.hasConsensus;
 
             return (
               <div
@@ -517,6 +525,8 @@ export function PokerTable({
                       className={`absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-white dark:bg-slate-900 flex flex-col items-center justify-between p-2 sm:p-2.5 shadow-xl transition-all ${
                         isConsensusWinner
                           ? "border-2 border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/20"
+                          : isTiedVote
+                          ? "border-2 border-amber-500/80 shadow-amber-500/20 ring-2 ring-amber-500/20"
                           : "border-2 border-indigo-500/70 dark:border-indigo-500/50 text-indigo-600 dark:text-indigo-400"
                       }`}
                     >
@@ -551,9 +561,17 @@ export function PokerTable({
 
                       {/* Bottom Back: Summary Pill */}
                       <div className="w-full flex justify-center">
-                        {isModeVote ? (
+                        {isConsensusWinner ? (
                           <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/60 dark:border-emerald-700/60 shadow-sm">
-                            ★ {analytics.hasConsensus ? "Consensus" : "Majority"}
+                            ★ Consensus
+                          </span>
+                        ) : isSingleClearMajority ? (
+                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/60 dark:border-emerald-700/60 shadow-sm">
+                            ★ Majority
+                          </span>
+                        ) : isTiedVote ? (
+                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 shadow-sm">
+                            Split ({analytics.modeCount} votes)
                           </span>
                         ) : analytics.spread !== null &&
                           analytics.spread > 0 &&

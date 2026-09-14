@@ -55,4 +55,27 @@ describe("calculateVoteAnalytics", () => {
       result.distribution.some((d) => d.value === 2 && d.count === 1),
     ).toBe(true);
   });
+
+  it("should detect bimodal ties accurately without false consensus", () => {
+    const votes: FibonacciValue[] = [3, 3, 8, 8];
+    const result = calculateVoteAnalytics(votes);
+
+    expect(result.totalVotes).toBe(4);
+    expect(result.isTie).toBe(true);
+    expect(result.modes).toEqual([3, 8]);
+    expect(result.modeCount).toBe(2);
+    expect(result.modePercentage).toBe(50);
+    expect(result.hasConsensus).toBe(false);
+  });
+
+  it("should not trigger consensus for a solo single-voter session", () => {
+    const votes: FibonacciValue[] = [5];
+    const result = calculateVoteAnalytics(votes);
+
+    expect(result.totalVotes).toBe(1);
+    expect(result.isTie).toBe(false);
+    expect(result.modes).toEqual([5]);
+    expect(result.modePercentage).toBe(100);
+    expect(result.hasConsensus).toBe(false);
+  });
 });

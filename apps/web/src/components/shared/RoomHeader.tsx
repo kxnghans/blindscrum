@@ -12,6 +12,7 @@ import { Copy, Check, Layers, User, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserProfileModal } from "./UserProfileModal";
+import { useIsMounted } from "@/hooks/useIsMounted";
 import type { Participant } from "@/types/scrum";
 
 interface RoomHeaderProps {
@@ -33,6 +34,7 @@ export function RoomHeader({
 }: RoomHeaderProps) {
   const [copied, setCopied] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const mounted = useIsMounted();
 
   const handleCopyLink = async () => {
     if (typeof window === "undefined") return;
@@ -116,7 +118,7 @@ export function RoomHeader({
               title="Edit name and avatar"
             >
               <div className="relative w-6 h-6 rounded-lg overflow-hidden shrink-0 border border-indigo-500/20">
-                {currentUser.avatar ? (
+                {mounted && currentUser.avatar ? (
                   <Image
                     src={currentUser.avatar}
                     alt={currentUser.name}
@@ -128,7 +130,9 @@ export function RoomHeader({
                   <User className="w-3.5 h-3.5 m-auto text-slate-400" />
                 )}
               </div>
-              <span className="max-w-[100px] truncate">{currentUser.name}</span>
+              <span className="max-w-[100px] truncate">
+                {mounted ? currentUser.name : "..."}
+              </span>
             </button>
 
             <ThemeToggle />

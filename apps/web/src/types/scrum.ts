@@ -39,6 +39,8 @@ export interface VoteAnalytics {
   totalVotes: number;
   average: number | null;
   mode: FibonacciValue | null;
+  modes: FibonacciValue[];
+  isTie: boolean;
   modeCount: number;
   modePercentage: number;
   min: number | null;

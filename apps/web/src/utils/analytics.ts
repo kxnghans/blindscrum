@@ -27,6 +27,8 @@ export function calculateVoteAnalytics(
       totalVotes: 0,
       average: null,
       mode: null,
+      modes: [],
+      isTie: false,
       modeCount: 0,
       modePercentage: 0,
       min: null,
@@ -59,23 +61,33 @@ export function calculateVoteAnalytics(
     spread = max - min;
   }
 
-  // Mode (most frequent vote)
-  let mode: FibonacciValue | null = null;
-  let modeCount = 0;
-  for (const [val, count] of counts.entries()) {
-    if (count > modeCount) {
-      mode = val;
-      modeCount = count;
+  // Find highest frequency count
+  let maxCount = 0;
+  for (const count of counts.values()) {
+    if (count > maxCount) {
+      maxCount = count;
     }
   }
 
+  // Collect all values matching the maximum count (handles ties / bimodal distributions)
+  const modes: FibonacciValue[] = [];
+  for (const [val, count] of counts.entries()) {
+    if (count === maxCount) {
+      modes.push(val);
+    }
+  }
+  modes.sort((a, b) => a - b);
+
+  const isTie = modes.length > 1;
+  const mode = modes[0] ?? null;
+  const modeCount = maxCount;
   const modePercentage =
     activeVotes.length > 0
       ? Math.round((modeCount / activeVotes.length) * 100)
       : 0;
 
-  // Has consensus if >= 70% of voters agreed on the mode and at least 2 people voted
-  const hasConsensus = modePercentage >= 70 && activeVotes.length >= 2;
+  // Has consensus only if a single clear mode, >= 70% agreement, and at least 2 voters
+  const hasConsensus = !isTie && modePercentage >= 70 && activeVotes.length >= 2;
 
   // Distribution across known Fibonacci cards
   const distribution: VoteDistributionItem[] = [];
@@ -99,6 +111,8 @@ export function calculateVoteAnalytics(
     totalVotes: activeVotes.length,
     average,
     mode,
+    modes,
+    isTie,
     modeCount,
     modePercentage,
     min,
