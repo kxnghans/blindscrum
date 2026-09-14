@@ -213,29 +213,36 @@ body {
 
 .animate-throw-arc {
   animation: throwArc 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  will-change: transform, opacity;
 }
 
 .animate-splat-burst {
   animation: splatBurst 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
 }
 
 .animate-gas-mist {
   animation: gasMist 2.6s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 .animate-zzz-drift {
   animation: zzzDrift 2.2s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 .animate-zap-flash {
   animation: zapFlash 1.8s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 .animate-card-shake {
   animation: cardShake 0.4s ease-in-out;
+  will-change: transform;
 }
 
 .animate-cheers-burst {
   animation: cheersBurst 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
 }
 

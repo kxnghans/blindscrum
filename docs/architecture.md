@@ -189,3 +189,30 @@ flowchart LR
         AnimationLayer --> AutoPrune["Automatic Ephemeral Pruning<br/>3000ms State Eviction<br/>apps/web/src/hooks/useScrumSession.ts"]
     end
 ```
+
+---
+
+## 7. Distributed Mesh Failover & Heartbeat Protocol
+
+Because room state (story title, backlog queue, completed stories, secret votes) is synchronized across all peers in real time, no central coordinator is required. If the room host drops, the mesh automatically elects the next senior peer without losing any session data.
+
+```mermaid
+flowchart LR
+    subgraph Detection["Departure Detection"]
+        Graceful(["Graceful Exit<br/>Tab Close / Reload<br/>beforeunload event"]) --> PeerLeave["Broadcast PEER_LEAVE<br/>Instant 0ms drop<br/>apps/web/src/types/scrum.ts"]
+        Ungraceful(["Ungraceful Exit<br/>Network Loss / Crash<br/>Radio silence"]) --> HeartbeatSweep[["Heartbeat Monitor<br/>3s Ping / 8s Timeout<br/>apps/web/src/hooks/useScrumSession.ts"]]
+    end
+
+    subgraph Election["Mesh Leader Election"]
+        PeerLeave --> SortPeers["Deterministic Sort<br/>joinedAt ASC || id ASC<br/>apps/web/src/hooks/useScrumSession.ts"]
+        HeartbeatSweep --> SortPeers
+        SortPeers --> ElectNewHost["Elect Senior Active Peer<br/>isHost evaluates true<br/>apps/web/src/hooks/useScrumSession.ts"]
+    end
+
+    subgraph StateContinuity["Zero Data Loss Continuity"]
+        ElectNewHost --> UnlockControls["Unlock Host Controls<br/>Reveal, Next, Title Editor<br/>apps/web/src/components/arena/PokerTable.tsx"]
+        ElectNewHost --> PreservedQueue["Preserve Active Backlog<br/>Queue & Votes 100% Intact<br/>apps/web/src/types/scrum.ts"]
+        ElectNewHost --> SyncNewcomers["Answer New SYNC_REQUEST<br/>Serve canonical snapshot<br/>apps/web/src/hooks/useScrumSession.ts"]
+    end
+```
+

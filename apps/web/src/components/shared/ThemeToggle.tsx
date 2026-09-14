@@ -8,12 +8,12 @@
 
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Monitor } from "lucide-react";
 
 const emptySubscribe = () => () => {};
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -26,20 +26,35 @@ export function ThemeToggle() {
     );
   }
 
-  const isDark = resolvedTheme === "dark";
+  // 3-way cyclic switching: system -> light -> dark -> system
+  const cycleTheme = () => {
+    if (theme === "system") setTheme("light");
+    else if (theme === "light") setTheme("dark");
+    else setTheme("system");
+  };
+
+  const currentTheme = theme ?? "system";
+  const titleText =
+    currentTheme === "system"
+      ? "System theme (click for light mode)"
+      : currentTheme === "light"
+        ? "Light theme (click for dark mode)"
+        : "Dark theme (click for system mode)";
 
   return (
     <button
       type="button"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={cycleTheme}
       className="relative flex items-center justify-center w-9 h-9 rounded-xl border border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-      aria-label="Toggle visual theme"
-      title={`Switch to ${isDark ? "light" : "dark"} mode`}
+      aria-label={titleText}
+      title={titleText}
     >
-      {isDark ? (
-        <Sun className="w-4 h-4 text-amber-400 transition-transform hover:rotate-45" />
+      {currentTheme === "system" ? (
+        <Monitor className="w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform hover:scale-110" />
+      ) : currentTheme === "light" ? (
+        <Sun className="w-4 h-4 text-amber-500 transition-transform hover:rotate-45" />
       ) : (
-        <Moon className="w-4 h-4 text-indigo-600 transition-transform hover:-rotate-12" />
+        <Moon className="w-4 h-4 text-indigo-400 transition-transform hover:-rotate-12" />
       )}
     </button>
   );

@@ -82,18 +82,24 @@
   - Removed subtitles from "Start a Room" and "Join a Room" action cards.
   - Removed redundant "Joining as [Persona]" card from the landing page.
   - Stripped body subtitles from feature cards ("No databases", "Voice mic input", "Story queue"), leaving minimalist title badges.
-- [ ] **Task 12: 3-Way System Theme Switcher (System / Light / Dark)**
-  - Update `ThemeToggle.tsx` with `Monitor`, `Sun`, and `Moon` icons.
-  - Support cyclic switching: `system` -> `light` -> `dark` -> `system`.
-  - Maintain SSR hydration safety and accurate tooltips/aria-labels.
-- [ ] **Task 13: Animation & Mobile Responsiveness Deep Polish**
-  - Polish keyframes in `globals.css` with GPU acceleration (`transform`, `opacity`, `will-change`).
-  - Optimize `PokerTable.tsx` for smaller screens ($\le 375\text{px}$) with responsive card and seat scaling.
-  - Optimize `FibonacciDeck.tsx` card wrapping and mobile touch targets.
-  - Ensure header and story pipeline fit smoothly without overflow on narrow screens.
-- [ ] **Task 14: Data Structures, Code Clean Up & Quality Verification**
-  - Clean up unused imports, dead handlers, and review data structures.
-  - Run `pnpm check-types`, `pnpm lint`, `pnpm test`, and `pnpm build`.
-- [ ] **Task 15: Production Deployment & Git Commit**
-  - Deploy to Vercel production.
-  - Commit and push to `origin/main`.
+- [x] **Task 12: 3-Way System Theme Switcher (System / Light / Dark)**
+  - Updated `ThemeToggle.tsx` with `Monitor`, `Sun`, and `Moon` icons.
+  - Supported cyclic switching: `system` -> `light` -> `dark` -> `system`.
+  - Maintained SSR hydration safety via `useSyncExternalStore` and accurate tooltips/aria-labels.
+- [x] **Task 13: Animation & Mobile Responsiveness Deep Polish**
+  - Polished keyframes in `globals.css` with GPU acceleration (`transform`, `opacity`, `will-change`).
+  - Optimized `PokerTable.tsx` for smaller screens ($\le 375\text{px}$) with responsive card and seat scaling.
+  - Optimized `FibonacciDeck.tsx` card wrapping and mobile touch targets.
+  - Verified header, story pipeline, and drawer fit smoothly with zero horizontal scrollbar overflow.
+- [x] **Task 14: Data Structures, Code Clean Up & Quality Verification**
+  - Refactored session state lifecycle and eliminated reconnection loops with stable refs.
+  - Verified zero `any` across the codebase and strict type safety.
+  - Verified stability: `pnpm check-types` (0 errors), `pnpm lint` (0 warnings), `pnpm test` (13/13 passed).
+- [x] **Task 15: Production Deployment & Git Sync**
+  - Deployed to Vercel production at `https://blindscrum.vercel.app`.
+  - Pushed to `origin/main` and `origin/qa`.
+- [x] **Task 16: P2P Multi-Peer Failover & WebRTC Privacy Audit**
+  - Implemented dual-layer host failover: graceful `PEER_LEAVE` (0ms) and ungraceful 3s `HEARTBEAT` sweep (8s drop).
+  - Verified full room state preservation (queue, active ticket, completed stories) upon host departure.
+  - Conducted WebRTC IP privacy audit: confirmed zero backend persistence, mDNS local IP masking, and direct P2P transport.
+  - Verified multi-tab end-to-end execution in Chrome automation via `run-p2p-failover-viztest.mjs`.
