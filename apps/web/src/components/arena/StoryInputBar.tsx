@@ -2,8 +2,7 @@
 
 /**
  * @file StoryInputBar.tsx
- * @description Main story sizing bar featuring voice-to-text microphone capture,
- * live title updates, and quick asynchronous addition to the story queue.
+ * @description Main story input with microphone speech-to-text and quick queuing.
  */
 
 import { useState, useRef } from "react";
@@ -30,7 +29,7 @@ export function StoryInputBar({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const micRef = useRef<HTMLButtonElement | null>(null);
 
-  // Synchronize incoming title updates during render without effect cascade
+  // Synchronize incoming title updates during render without cascading effect
   if (currentTitle !== prevTitle) {
     setPrevTitle(currentTitle);
     if (!isEditing) {
@@ -38,7 +37,7 @@ export function StoryInputBar({
     }
   }
 
-  // Voice speech-to-text hook
+  // Browser speech-to-text
   const { isMicActive, showVisualCues, placeholderText, toggleMic } =
     useVoiceSearch({
       onTranscript: (transcript) => {
@@ -58,19 +57,16 @@ export function StoryInputBar({
     }
     onUpdateTitle(inputValue.trim());
     setIsEditing(false);
-    toast.success("Story title updated for the room.");
+    toast.success("Story title updated.");
   };
 
   const handleQuickAddToQueue = () => {
     if (!inputValue.trim()) {
-      toast.error("Enter a title before queuing.");
+      toast.error("Type a title first.");
       return;
     }
     onAddToQueue(inputValue.trim());
-    toast.success("Added to story queue!", {
-      description: "It will be ready to size when the team hits 'Next Story'.",
-    });
-    // If was editing for queue, revert active bar to currentTitle
+    toast.success("Added to queue.");
     if (inputValue !== currentTitle) {
       setInputValue(currentTitle);
       setIsEditing(false);
@@ -80,16 +76,16 @@ export function StoryInputBar({
   return (
     <div className="w-full max-w-3xl mx-auto my-6 px-4">
       <div className="relative p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-lg shadow-indigo-500/5 transition-all">
-        {/* Visual Cues Indicator during Speech */}
+        {/* Listening indicator */}
         {showVisualCues && (
           <div className="absolute -top-3 left-6 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold tracking-wider uppercase flex items-center gap-1.5 shadow-md animate-pulse">
             <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
-            Listening Live
+            Listening
           </div>
         )}
 
         <div className="flex items-center gap-2">
-          {/* Microphone Capture Button */}
+          {/* Mic toggle */}
           <button
             ref={micRef}
             type="button"
@@ -99,8 +95,8 @@ export function StoryInputBar({
                 ? "bg-red-500 text-white shadow-lg shadow-red-500/30 ring-4 ring-red-500/20 animate-pulse"
                 : "bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400"
             }`}
-            title={isMicActive ? "Stop voice listening" : "Click to speak story title"}
-            aria-label="Toggle voice input"
+            title={isMicActive ? "Stop listening" : "Click to speak story title"}
+            aria-label="Toggle microphone input"
           >
             {isMicActive ? (
               <MicOff className="w-5 h-5 animate-bounce" />
@@ -109,7 +105,7 @@ export function StoryInputBar({
             )}
           </button>
 
-          {/* Primary Story Title Input */}
+          {/* Title input */}
           <div className="flex-1 relative">
             <input
               ref={inputRef}
@@ -131,7 +127,7 @@ export function StoryInputBar({
             />
           </div>
 
-          {/* Action Buttons */}
+          {/* Actions */}
           <div className="flex items-center gap-1.5 shrink-0 pr-1">
             {isHost && isEditing && inputValue !== currentTitle && (
               <button
@@ -145,12 +141,11 @@ export function StoryInputBar({
               </button>
             )}
 
-            {/* Quick Queue Story Button */}
             <button
               type="button"
               onClick={handleQuickAddToQueue}
               className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700/60 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-              title="Add this title to the upcoming queue without interrupting active vote"
+              title="Add this title to the queue without interrupting the current vote"
             >
               <Plus className="w-3.5 h-3.5 text-indigo-500" />
               <span className="hidden sm:inline">Queue</span>
@@ -158,18 +153,18 @@ export function StoryInputBar({
           </div>
         </div>
 
-        {/* Informative Sub-bar */}
+        {/* Sub-bar */}
         <div className="flex items-center justify-between px-3 pt-1.5 pb-0.5 text-[11px] text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/60 mt-1">
           <span className="flex items-center gap-1">
             {isHost ? (
               <span className="text-indigo-600 dark:text-indigo-400 font-medium inline-flex items-center gap-1">
-                <Edit3 className="w-3 h-3" /> Host sizing control
+                <Edit3 className="w-3 h-3" /> Host controls active title
               </span>
             ) : (
-              <span>Voter Mode — Host controls active story</span>
+              <span>Host sets the active story</span>
             )}
           </span>
-          <span>Tip: Tap mic to speak or enter to queue</span>
+          <span>Tip: Tap mic or press Enter to queue</span>
         </div>
       </div>
     </div>

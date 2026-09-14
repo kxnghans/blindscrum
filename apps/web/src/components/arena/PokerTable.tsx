@@ -2,8 +2,8 @@
 
 /**
  * @file PokerTable.tsx
- * @description Virtual poker table displaying live participants, masked card backs during voting,
- * 3D flip card animations on reveal, and host round orchestration controls.
+ * @description Virtual table showing participants, face-down cards during voting,
+ * and 3D card flips when the host reveals.
  */
 
 import Image from "next/image";
@@ -37,12 +37,11 @@ export function PokerTable({
 
   return (
     <div className="w-full max-w-5xl mx-auto my-8 px-4">
-      {/* Table Arena Surface */}
+      {/* Table surface */}
       <div className="relative rounded-3xl p-6 sm:p-10 bg-gradient-to-b from-slate-100/90 to-slate-200/90 dark:from-slate-900/90 dark:to-slate-950/90 border border-slate-300/80 dark:border-slate-800 shadow-2xl overflow-hidden">
-        {/* Subtle Felt Background Pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
 
-        {/* Center Arena Status & Host Controls */}
+        {/* Center status & host actions */}
         <div className="relative z-10 flex flex-col items-center justify-center text-center py-4 mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-4 shadow-sm">
             <span
@@ -51,11 +50,11 @@ export function PokerTable({
               }`}
             />
             {isRevealed
-              ? "All Votes Revealed"
+              ? "Votes revealed"
               : `${votedCount} of ${totalCount} teammates voted`}
           </div>
 
-          {/* Host Primary Action Triggers */}
+          {/* Host actions */}
           {isHost ? (
             <div className="flex flex-wrap items-center justify-center gap-3">
               {!isRevealed ? (
@@ -76,7 +75,7 @@ export function PokerTable({
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold border border-slate-300 dark:border-slate-700 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    Revote Round
+                    Revote
                   </button>
 
                   {hasQueuedStories && (
@@ -86,7 +85,7 @@ export function PokerTable({
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-lg shadow-emerald-500/25 transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/50"
                     >
                       <ArrowRight className="w-4 h-4" />
-                      Next Story in Queue
+                      Next Story
                     </button>
                   )}
                 </>
@@ -95,13 +94,13 @@ export function PokerTable({
           ) : (
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {isRevealed
-                ? "Host may start a revote or proceed to the next story."
-                : "Waiting for host to reveal cards..."}
+                ? "Waiting for the host to restart or move to the next ticket."
+                : "Waiting for the host to flip cards..."}
             </p>
           )}
         </div>
 
-        {/* Participants Grid / Orbit */}
+        {/* Participants grid */}
         <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 justify-items-center">
           {participants.map((participant) => {
             const isSelf = participant.id === currentUserId;
@@ -112,14 +111,14 @@ export function PokerTable({
                 key={participant.id}
                 className="flex flex-col items-center gap-2.5"
               >
-                {/* 3D Poker Card Container */}
+                {/* Card */}
                 <div className="perspective-1000 w-16 h-24 sm:w-20 sm:h-28">
                   <div
                     className={`relative w-full h-full rounded-2xl transition-transform duration-500 preserve-3d shadow-md ${
                       isRevealed ? "rotate-y-180" : ""
                     }`}
                   >
-                    {/* Front Face: Card Back (Masked Voting Phase) */}
+                    {/* Front: Masked */}
                     <div
                       className={`absolute inset-0 backface-hidden rounded-2xl p-1.5 flex flex-col items-center justify-center border transition-all ${
                         hasVoted
@@ -138,13 +137,13 @@ export function PokerTable({
                         <div className="flex flex-col items-center gap-1 text-center opacity-60">
                           <Clock className="w-4 h-4 animate-spin text-slate-400" />
                           <span className="text-[9px] font-semibold uppercase tracking-wider">
-                            Thinking
+                            Voting...
                           </span>
                         </div>
                       )}
                     </div>
 
-                    {/* Back Face: Revealed Card Value */}
+                    {/* Back: Revealed Value */}
                     <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 flex flex-col items-center justify-center p-2 shadow-xl">
                       <span className="text-2xl sm:text-3xl font-black tracking-tight">
                         {participant.vote ?? "?"}
@@ -156,7 +155,7 @@ export function PokerTable({
                   </div>
                 </div>
 
-                {/* Participant Persona Badge */}
+                {/* Participant badge */}
                 <div className="flex flex-col items-center text-center">
                   <div className="relative">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-slate-300 dark:border-slate-700 shadow-sm">

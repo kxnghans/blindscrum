@@ -2,9 +2,7 @@
 
 /**
  * @file AnalyticsPanel.tsx
- * @description Comprehensive post-reveal estimation analytics dashboard.
- * Displays vote frequency bar chart, statistical summary cards (Average, Mode, Spread),
- * consensus alerts, and one-click Jira/Linear markdown export.
+ * @description Summary cards, vote distribution chart, and markdown export.
  */
 
 import { useState } from "react";
@@ -53,11 +51,11 @@ export function AnalyticsPanel({
 
   const handleCopyMarkdown = async () => {
     const lines = [
-      `### 🃏 BlindScrum Estimation: ${storyTitle}`,
-      `- **Consensus / Mode**: ${mode ?? "N/A"} pts (${modeCount} votes, ${modePercentage}%)`,
+      `### BlindScrum: ${storyTitle}`,
+      `- **Consensus**: ${mode ?? "N/A"} pts (${modeCount} votes, ${modePercentage}%)`,
       `- **Average**: ${average !== null ? `${average} pts` : "N/A"}`,
-      `- **Spread**: ${min !== null && max !== null ? `${min} - ${max} pts (Δ ${spread})` : "N/A"}`,
-      `- **Total Participants**: ${analytics.totalVotes}`,
+      `- **Spread**: ${min !== null && max !== null ? `${min} - ${max} pts (diff ${spread})` : "N/A"}`,
+      `- **Votes**: ${analytics.totalVotes}`,
       ``,
       `| Teammate | Vote |`,
       `| :--- | :--- |`,
@@ -69,9 +67,7 @@ export function AnalyticsPanel({
     try {
       await navigator.clipboard.writeText(lines.join("\n"));
       setCopied(true);
-      toast.success("Markdown summary copied!", {
-        description: "Formatted table ready to paste into Jira, Linear, or Slack.",
-      });
+      toast.success("Markdown copied to clipboard.");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Failed to copy markdown.");
@@ -81,17 +77,17 @@ export function AnalyticsPanel({
   return (
     <section className="w-full max-w-5xl mx-auto my-8 px-4 animate-in fade-in-50 duration-300">
       <div className="rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
-        {/* Section Header with Export Action */}
+        {/* Header with export */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800/80">
           <div>
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-indigo-500" />
               <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-                Estimation Analytics
+                Vote Results
               </h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Breakdown for: <span className="font-semibold text-slate-700 dark:text-slate-300">&ldquo;{storyTitle}&rdquo;</span>
+              Results for: <span className="font-semibold text-slate-700 dark:text-slate-300">&ldquo;{storyTitle}&rdquo;</span>
             </p>
           </div>
 
@@ -105,88 +101,85 @@ export function AnalyticsPanel({
             ) : (
               <Copy className="w-3.5 h-3.5 text-indigo-500" />
             )}
-            <span>{copied ? "Copied Markdown" : "Copy Jira/Linear Markdown"}</span>
+            <span>{copied ? "Copied" : "Copy Markdown"}</span>
           </button>
         </div>
 
-        {/* Consensus Alert Ribbon */}
+        {/* Consensus or divergence callout */}
         {hasConsensus ? (
           <div className="my-5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-medium">
             <Award className="w-5 h-5 text-emerald-500 shrink-0" />
             <span>
-              <strong>Strong Consensus Reached!</strong> Over {modePercentage}% of the team agreed on <strong>{mode} story points</strong>.
+              The team agreed on <strong>{mode} points</strong> ({modePercentage}% consensus).
             </span>
           </div>
         ) : spread !== null && spread >= 5 ? (
           <div className="my-5 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
             <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             <span>
-              <strong>High Estimation Divergence (Spread: {spread} pts).</strong> Votes range from {min} to {max}. Consider discussing outliers before proceeding.
+              Wide spread ({min} to {max} points). Talk through the outliers before locking it in.
             </span>
           </div>
         ) : null}
 
-        {/* Summary Metric Cards */}
+        {/* Summary metric cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
-          {/* Mode / Most Selected Card */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <Award className="w-5 h-5" />
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Majority Option
+                Consensus Pick
               </p>
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">
                 {mode !== null ? `${mode} pts` : "N/A"}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {modeCount} votes ({modePercentage}% consensus)
+                {modeCount} votes ({modePercentage}%)
               </p>
             </div>
           </div>
 
-          {/* Average Story Points */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Arithmetic Average
+                Average
               </p>
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">
                 {average !== null ? `${average}` : "N/A"}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Mean across {analytics.totalVotes} responses
+                Across {analytics.totalVotes} responses
               </p>
             </div>
           </div>
 
-          {/* Spread / Divergence */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
               <Share2 className="w-5 h-5" />
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Range & Spread
+                Spread
               </p>
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">
                 {min !== null && max !== null ? `${min} – ${max}` : "N/A"}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {spread !== null ? `Spread of ${spread} points` : "Single vote"}
+                {spread !== null ? `Difference of ${spread} pts` : "Single vote"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Visual Vote Distribution Bar Chart */}
+        {/* Distribution */}
         <div className="mt-8">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
-            Vote Distribution Frequency
+            Vote Distribution
           </p>
 
           <div className="space-y-3">
@@ -196,12 +189,10 @@ export function AnalyticsPanel({
 
               return (
                 <div key={String(dist.value)} className="flex items-center gap-3">
-                  {/* Card Label */}
                   <div className="w-10 text-right font-mono font-bold text-xs text-slate-700 dark:text-slate-300 shrink-0">
                     {dist.value}
                   </div>
 
-                  {/* Horizontal Bar Graphic */}
                   <div className="flex-1 h-7 rounded-xl bg-slate-100 dark:bg-slate-950 p-1 overflow-hidden relative border border-slate-200/50 dark:border-slate-800/50">
                     <div
                       className={`h-full rounded-lg transition-all duration-500 flex items-center justify-end px-2 ${
@@ -219,7 +210,6 @@ export function AnalyticsPanel({
                     </div>
                   </div>
 
-                  {/* Percentage Indicator */}
                   <div className="w-12 text-xs font-semibold text-slate-400 dark:text-slate-500 text-left">
                     {dist.count > 0 ? `${dist.percentage}%` : "0%"}
                   </div>

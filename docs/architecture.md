@@ -1,12 +1,12 @@
-# BlindScrum: Technical Architecture & System Design
+# System Architecture: BlindScrum
 
-This document details the high-fidelity system design, real-time protocols, state machines, and data flow pipelines that power **BlindScrum**.
+This document outlines the architecture, real-time protocols, state machine transitions, and data pipelines for BlindScrum.
 
 ---
 
-## 1. Master System Context Architecture
+## 1. System Overview
 
-BlindScrum operates as an ephemeral real-time client application with zero persistent database storage. State is synchronized across distributed clients using WebSocket presence and broadcast clusters with a same-device BroadcastChannel failover.
+BlindScrum runs as a client-side real-time application with no database. State syncs across peers using Supabase Realtime presence and broadcast channels, with a local browser BroadcastChannel fallback for multi-tab testing on the same machine.
 
 ```mermaid
 flowchart LR
@@ -49,9 +49,9 @@ flowchart LR
 
 ---
 
-## 2. Ephemeral Estimation Lifecycle State Machine
+## 2. Estimation State Machine
 
-The estimation cycle prevents cognitive anchoring through a strict 3-phase state machine where vote numbers remain isolated until host-triggered revelation.
+The estimation cycle hides individual vote values during the voting phase to prevent anchoring. Card numbers stay on the voter's machine until the host triggers the reveal.
 
 ```mermaid
 flowchart LR
@@ -96,7 +96,7 @@ flowchart LR
 
 ---
 
-## 3. Real-Time Blind Voting Sequence
+## 3. Real-Time Voting Sequence
 
 ```mermaid
 sequenceDiagram
@@ -125,7 +125,7 @@ sequenceDiagram
 
 ---
 
-## 4. Voice-to-Text Input Pipeline
+## 4. Voice Input Pipeline
 
 ```mermaid
 flowchart LR
@@ -145,7 +145,7 @@ flowchart LR
 
 ---
 
-## 5. Asynchronous Story Queue State Transitions
+## 5. Story Queue Transitions
 
 ```mermaid
 flowchart LR

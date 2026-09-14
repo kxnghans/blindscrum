@@ -1,77 +1,77 @@
-# Product Requirements Document (PRD): BlindScrum
+# Product Requirements: BlindScrum
 
 ---
 
-## 1. Executive Summary & Vision
+## 1. Goal
 
-**BlindScrum** is a lightweight, ephemeral planning poker application built for modern distributed agile development teams. Existing estimation software is bloated with mandatory authentication walls, complex Jira integrations that lag during sprint ceremonies, persistent database tracking, and clunky interfaces that introduce cognitive anchoring bias. 
+BlindScrum is a planning poker tool built for agile engineering teams. Most existing options require accounts, sync slowly with Jira during standups, store data on servers forever, and let people anchor each other by shouting or showing numbers early.
 
-BlindScrum eliminates these pain points by offering instant zero-account room links, native browser speech recognition for ticket inputs, an asynchronous story queue, and true blind Fibonacci estimation with immediate consensus analytics.
-
----
-
-## 2. Target Audience & Core Personas
-
-### Persona A: The Scrum Master / Engineering Lead ("Alex")
-- **Needs:** Fast room spin-up, zero participant login friction, smooth control over ticket sizing, and instant markdown summaries ready to paste directly into Jira, Linear, or GitHub issues.
-- **Pain Point:** Spending 5 minutes every standup asking teammates to log into an estimation tool or reset forgotten passwords.
-
-### Persona B: The Distributed Developer ("Jordan")
-- **Needs:** Ability to click a link on Slack/Teams and immediately vote on their laptop or mobile phone without creating an account.
-- **Pain Point:** Senior engineers stating their estimate out loud before others can think, anchoring the team to their number.
+BlindScrum keeps things minimal. You open the site, send a link, read or type the ticket title, vote in private, and flip the cards together. When everyone leaves, the room state disappears.
 
 ---
 
-## 3. Core Problems Solved
+## 2. Personas
 
-1. **Cognitive Anchoring Bias:** When someone votes or speaks early, junior or hesitant engineers unconsciously adjust their estimate. BlindScrum hides card values until the synchronized reveal.
-2. **Session Persistence Bloat:** Most tools store old rooms and user profiles indefinitely in Postgres databases. BlindScrum is 100% ephemeral—sessions live in client memory and active WebSocket channels.
-3. **Typing Friction during Ceremonies:** Scrum masters juggle notes and ticket links. BlindScrum provides a browser-native voice input microphone to speak story titles naturally.
-4. **Queue Disruption:** In typical planning poker apps, adding upcoming stories requires stopping the current round. BlindScrum provides an asynchronous drawer where team members can queue stories anytime.
+### Alex (Tech Lead / Scrum Master)
+- **Goal:** Run a quick 10-minute sizing session without waiting for people to create accounts or reset passwords.
+- **Needs:** Fast room links, voice input so they don't have to retype tickets from Jira, and clean markdown to paste results straight into ticket descriptions.
 
----
-
-## 4. Feature Specifications
-
-### 4.1 Ephemeral Rooms & Frictionless Sharing
-- **Room Code Generation:** Produces clean alphanumeric codes (e.g., `SCRUM-492` or `BLND-92`).
-- **Shareable Deep Links:** Supports `/room/[code]` dynamic routing and `/?room=CODE` query parameter auto-join.
-- **One-Click Clipboard Action:** Room header features a copy button with toast notification.
-
-### 4.2 Agile Persona Generator
-- **Deterministic Monikers:** Generates two-word agile personas (e.g., *Velocity Falcon*, *Agile Otter*).
-- **Embedded SVG Avatars:** Vector graphics generated on-the-fly via mathematical hash with zero external CDN requests.
-- **User Customization:** In-place modal dialog allows teammates to override their alias or regenerate faces.
-
-### 4.3 Voice-Enabled Story Input
-- **Microphone Capture:** Built upon the W3C Web Speech API (`SpeechRecognition`).
-- **Live Interim Preview:** Transcribed speech renders in real-time in the input bar.
-- **Silence Watchdog:** 2000ms silence detection auto-stops recording and commits the story title.
-
-### 4.4 Asynchronous Story Queue
-- **Async Addition:** Host or participants can queue upcoming tickets while voting is actively underway.
-- **Queue Drawer UI:** Collapsible drawer displaying ordered queue with item count badge.
-- **Sequential Advance:** "Next Story" pops the top queue item into the arena, clears cards, and archives the completed estimate into session history.
-
-### 4.5 Blind Fibonacci Deck & 3D Virtual Table
-- **Fibonacci Scale:** Cards for `1, 2, 3, 5, 8, 13, 20` plus special cards `?` (Unsure) and `☕` (Coffee break).
-- **Network-Level Privacy:** Only `{ hasVoted: true }` tokens are broadcast during voting; numbers remain strictly on the voter's device until the reveal event.
-- **3D Card Flip Table:** Renders connected participants with face-down cards and pulsating vote indicators, executing a synchronized 3D card flip on reveal.
-
-### 4.6 Consensus Analytics & Export
-- **Distribution Bar Chart:** Frequency distribution showing counts and percentages across cards.
-- **Summary Cards:** Arithmetic Mean (rounded to 1 decimal), Mode (majority option with consensus percentage), and Spread (Min to Max).
-- **Consensus & Divergence Alerts:** Triggers celebration confetti on >= 70% consensus; highlights high divergence when spread >= 5 points.
-- **Markdown Export:** Single-click copy of a formatted markdown table for pasting into Jira or Slack.
+### Jordan (Software Engineer)
+- **Goal:** Vote honestly without feeling pressured by what senior engineers pick.
+- **Needs:** Click a Slack link and vote on a phone or laptop with no login step.
 
 ---
 
-## 5. Non-Functional Requirements
+## 3. Problems Solved
 
-| Dimension | Target Specification |
+1. **Anchoring bias:** When senior developers vote early or speak their number, others adjust downward or upward. BlindScrum hides card values until the host flips the table.
+2. **Database bloat:** Most estimation tools save old sessions in Postgres databases. BlindScrum keeps room state strictly in browser memory and WebSocket channels.
+3. **Ceremony typing friction:** Leads spend meeting time switching tabs and typing out ticket summaries. The mic button lets them speak the title, which transcribes into the box live.
+4. **Queue interruption:** In standard tools, adding the next ticket forces the team to stop or wait. BlindScrum includes a slide-out queue so anyone can queue upcoming tickets during the vote.
+
+---
+
+## 4. Requirements
+
+### 4.1 Ephemeral Rooms & Link Sharing
+- Room codes follow a simple pattern (like `SCRUM-492` or `BLND-92`).
+- Links support `/room/[code]` or `/?room=CODE` auto-joining.
+- Header includes a one-click copy button with toast feedback.
+
+### 4.2 Personas & Avatars
+- Each player gets a two-word agile name (like *Velocity Falcon* or *Agile Otter*).
+- Avatars are generated as inline SVGs based on a string hash. No external image requests.
+- Players can edit their name or click randomize in a profile modal.
+
+### 4.3 Voice Input
+- Uses the browser SpeechRecognition API.
+- Shows live interim text while speaking.
+- Stops automatically after 2 seconds of silence or when tapping outside the mic button.
+
+### 4.4 Story Queue
+- Anyone in the room can add upcoming tickets to the queue at any time.
+- Queue drawer shows ordered tickets, who added them, and controls to move up or delete.
+- Host can click "Next Story" to pop the first queued item into the arena, reset cards, and save the previous estimate to the completed log.
+
+### 4.5 Secret Voting & 3D Table
+- Standard Fibonacci cards: `1, 2, 3, 5, 8, 13, 20` plus `?` and coffee break.
+- During voting, the app only broadcasts `{ hasVoted: true }`. Card numbers remain on the voter's device until the host clicks reveal.
+- The table displays cards face-down with a pulse indicator while voting, and flips them around when revealed.
+
+### 4.6 Analytics & Markdown Export
+- Horizontal bar chart shows vote counts per card.
+- Summary cards display average, consensus pick (with vote count and percentage), and spread (min to max).
+- Confetti fires when 70% or more of the team picks the same number.
+- Single button copies a formatted markdown table ready to paste into Jira, Linear, or Slack.
+
+---
+
+## 5. Technical Constraints
+
+| Dimension | Target |
 | :--- | :--- |
-| **Persistence** | **Zero DB storage**. All rooms and votes vanish upon participant disconnect. |
-| **Real-time Latency** | WebSocket broadcast and presence updates delivered in **< 100ms**. |
-| **Accessibility** | Full keyboard navigation across the card deck; ARIA attributes for screen readers; minimum 4.5:1 contrast ratio. |
-| **Edge Compatibility** | 100% compatible with Cloudflare Pages/Workers edge runtime via `@opennextjs/cloudflare`. |
-| **Zero External Assets** | Procedural Web Audio API sound synthesis and client-generated SVG avatars; no external image/audio CDN dependencies. |
+| **Storage** | Zero database storage. Rooms live in memory and WebSocket channels. |
+| **Realtime** | WebSocket events broadcast in under 100ms. |
+| **Accessibility** | Full keyboard support on card buttons, aria-pressed states, and 4.5:1 contrast. |
+| **Deployment** | OpenNext Cloudflare Pages and Workers edge runtime. |
+| **Assets** | Zero external audio or image dependencies. Sounds and SVGs are generated in the browser. |

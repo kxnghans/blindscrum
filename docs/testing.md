@@ -1,20 +1,12 @@
-# Testing & Quality Assurance: BlindScrum
+# Testing Strategy: BlindScrum
+
+This document explains the test runner setup, test suites, and manual verification steps for BlindScrum.
 
 ---
 
-## 1. Testing Philosophy & Standards
+## 1. Test Setup
 
-BlindScrum adheres to strict verification standards to guarantee stability in real-time multi-user environments:
-
-- **100% Core Logic Coverage:** All analytical calculations, room code transformations, and persona generators must be protected by automated unit tests.
-- **Zero-Tolerance Quality Gates:** Pull requests and deployments are gated by `check-types`, `lint`, and `test` pipelines.
-- **Strict Typing:** No `any` casting allowed in test or production source code.
-
----
-
-## 2. Test Runner Configuration (`apps/web/vitest.config.ts`)
-
-Testing is powered by **Vitest**:
+Tests run with **Vitest**:
 
 ```typescript
 import { defineConfig } from "vitest/config";
@@ -34,42 +26,42 @@ export default defineConfig({
 
 ---
 
-## 3. Test Suites Overview
+## 2. Unit Test Suites
 
-### 3.1 Analytics Calculation Suite (`apps/web/src/utils/analytics.test.ts`)
-- **Empty Array Handling:** Verifies total votes equal 0, averages/modes return null, and consensus flags false.
-- **Numeric Calculations:** Tests arithmetic mean rounding, mode identification, and min/max spread across standard Fibonacci numbers (`[3, 5, 5, 8]`).
-- **Consensus Threshold:** Validates that consensus triggers when $\ge 70\%$ of the team selects the same card.
-- **Special Cards:** Confirms `?` and `☕` votes are correctly tallied in frequency distributions without corrupting the numeric average.
+### 2.1 Analytics (`apps/web/src/utils/analytics.test.ts`)
+- **Empty input:** Returns 0 total votes, null for average and mode, and false for consensus.
+- **Numbers:** Tests arithmetic mean, mode, and spread across standard values (`[3, 5, 5, 8]`).
+- **Consensus rule:** Checks that consensus triggers when 70% or more of the team votes the same.
+- **Non-numeric cards:** Ensures `?` and coffee cards increment distribution counts without skewing the average.
 
-### 3.2 Agile Persona Suite (`apps/web/src/utils/persona.test.ts`)
-- **Format Verification:** Asserts monikers consist of two non-empty agile words (Adjective + Noun).
-- **SVG Integrity:** Ensures generated avatars produce valid `data:image/svg+xml` URIs containing compliant `<svg>` and `</svg>` elements.
-- **Determinism:** Confirms identical string seeds yield identical SVG avatars.
+### 2.2 Personas (`apps/web/src/utils/persona.test.ts`)
+- **Two-word alias:** Checks that the generator produces an adjective and a noun.
+- **Valid SVG:** Confirms generated strings are valid `data:image/svg+xml` data URIs with `<svg>` and `</svg>` tags.
+- **Determinism:** Verifies that passing the same seed string produces the same avatar every time.
 
-### 3.3 Room Code Suite (`apps/web/src/utils/roomCode.test.ts`)
-- **Format Structure:** Checks generated codes match `^[A-Z]+-\d{3}$`.
-- **Normalization:** Validates trimming, uppercase conversion, and stripping of invalid characters.
-- **Validation Rules:** Verifies length boundaries ($3 \le \text{length} \le 16$).
-
----
-
-## 4. Multi-Client Concurrency Verification
-
-Manual and integration testing validates multi-user behavior:
-
-1. **Simultaneous Voting:** Open three separate browser sessions to the same room (`BLND-92`). Verify voting in one window immediately updates the card back on peer tables without revealing the value.
-2. **Synchronized Reveal:** Confirm host's reveal action triggers 3D card flips across all connected clients simultaneously.
-3. **Host Failover:** Disconnect the host tab; verify the next oldest participant is automatically designated as the new host with action buttons enabled.
-4. **Asynchronous Queue:** Queue a new ticket from a voter tab; verify it appears in the host's queue drawer instantly without disrupting ongoing estimation.
+### 2.3 Room Codes (`apps/web/src/utils/roomCode.test.ts`)
+- **Format:** Confirms codes match `^[A-Z]+-\d{3}$`.
+- **Normalization:** Verifies trimming, uppercase conversion, and removal of illegal characters.
+- **Length limits:** Ensures codes between 3 and 16 characters pass validation.
 
 ---
 
-## 5. Verification Commands
+## 3. Concurrency Checks
 
-| Command | Action | Success Criteria |
+Before deploying, verify these multi-user interactions:
+
+1. **Private voting:** Open three browser tabs to the same room. Pick a card in tab A. Tabs B and C should see that participant A voted, but not see the number.
+2. **Synchronized reveal:** Click reveal in the host tab. All tabs should flip their cards simultaneously and render the bar chart.
+3. **Host switch:** Close the host's tab. The second oldest participant should gain host controls automatically.
+4. **Queue sync:** Queue a story in a participant tab. It should immediately show up in the host's queue drawer.
+
+---
+
+## 4. Commands
+
+| Command | Action | Expected |
 | :--- | :--- | :--- |
-| `pnpm test` | Runs all Vitest suites | 10 passed across 3 test files |
-| `pnpm check-types` | Strict TypeScript compiler check | 0 errors (`tsc --noEmit`) |
-| `pnpm lint` | ESLint 9 validation | 0 errors, 0 warnings |
-| `pnpm build` | Production Next.js build | Zero compilation errors |
+| `pnpm test` | Run Vitest | 10 tests passing across 3 files |
+| `pnpm check-types` | TypeScript check | 0 errors |
+| `pnpm lint` | ESLint 9 | 0 errors, 0 warnings |
+| `pnpm build` | Production build | Compiles cleanly |

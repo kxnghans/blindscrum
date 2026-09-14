@@ -2,8 +2,7 @@
 
 /**
  * @file FibonacciDeck.tsx
- * @description Interactive Fibonacci poker card deck with tactile selection physics,
- * keyboard accessibility, and active elevation states.
+ * @description Interactive Fibonacci poker cards with keyboard navigation and click feedback.
  */
 
 import {
@@ -31,14 +30,14 @@ export function FibonacciDeck({
       <div className="text-center mb-3">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           {isRevealed
-            ? "Votes Revealed — Review Analytics Below"
+            ? "Votes revealed"
             : selectedVote !== null
-              ? "Your Card is Locked (Tap another to switch)"
-              : "Select Your Estimate Card"}
+              ? "Card locked (click another to change)"
+              : "Pick your estimate"}
         </p>
       </div>
 
-      {/* Cards Grid / Ribbon */}
+      {/* Cards list */}
       <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4">
         {cards.map((val) => {
           const isSelected = selectedVote === val;
@@ -71,7 +70,7 @@ export function FibonacciDeck({
                 {val}
               </span>
 
-              {/* Main Center Value */}
+              {/* Center Value */}
               <span
                 className={`text-xl sm:text-3xl font-extrabold tracking-tight my-auto ${
                   isSelected
@@ -84,7 +83,7 @@ export function FibonacciDeck({
                 {val}
               </span>
 
-              {/* Bottom Inverted Mini */}
+              {/* Inverted Corner Value */}
               <span
                 className={`self-end text-[10px] sm:text-xs font-mono font-bold rotate-180 ${
                   isSelected
@@ -95,7 +94,7 @@ export function FibonacciDeck({
                 {val}
               </span>
 
-              {/* Selection Check Pip */}
+              {/* Pip */}
               {isSelected && (
                 <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm" />
               )}

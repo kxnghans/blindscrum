@@ -2,66 +2,66 @@
 
 ## Project Overview
 
-**BlindScrum** is an ultra-minimal, high-performance, ephemeral planning poker application built for agile engineering teams. It eliminates cognitive anchoring bias through masked real-time voting, provides browser-native voice story input, offers an asynchronous story queue, and renders instant consensus analytics with zero database persistence.
+BlindScrum is a planning poker tool for engineering teams. It stops people from anchoring to each other's votes by hiding picks until the reveal, lets you speak story titles over the mic, includes a backlog queue, and calculates consensus stats with zero database storage.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Monorepo:** Turborepo (`turbo`), `pnpm` workspace (`apps/*`)
 - **Web Framework:** Next.js 16 (App Router), React 19
-- **Language:** TypeScript (Strict mode, `"Any is the Enemy"`)
-- **Styling:** Tailwind CSS v4 (`@tailwindcss/postcss`), CSS Custom Properties
-- **State & Realtime:** Ephemeral Supabase Realtime Broadcast & Presence + local `BroadcastChannel` failover
-- **Speech Engine:** Native browser W3C `SpeechRecognition` / `webkitSpeechRecognition`
+- **Language:** TypeScript (Strict mode, no `any`)
+- **Styling:** Tailwind CSS v4 (`@tailwindcss/postcss`), CSS custom properties
+- **State & Realtime:** Ephemeral Supabase Realtime Broadcast & Presence with local `BroadcastChannel` fallback
+- **Speech Engine:** Browser W3C `SpeechRecognition` / `webkitSpeechRecognition`
 - **Testing:** Vitest
-- **Deployment:** Cloudflare Pages/Workers (via OpenNext `@opennextjs/cloudflare` & `wrangler`)
+- **Deployment:** Cloudflare Pages/Workers (`@opennextjs/cloudflare` & `wrangler`)
 
 ---
 
-## 🧱 Core Engineering Principles
+## Core Engineering Principles
 
-1. **YAGNI & KISS:** Build only what is immediately needed. Strictly avoid over-engineering, unnecessary database migrations, or bloated abstractions.
-2. **Zero Persistence (Ephemeral Rule):** Sessions must live exclusively in memory and active WebSocket channels. Do not create persistent Postgres tables, session cookies, or backend storage for room state.
-3. **True Blind Voting Integrity:** During the `VOTING` state, clients must transmit only masked status packets (`{ hasVoted: true }`). Numerical card values must remain isolated on client memory until the host emits the `REVEAL_VOTES` event.
-4. **Separation of Concerns:** Keep UI components dumb and modular. State orchestration is encapsulated in domain hooks (`useScrumSession`, `useVoiceSearch`), and calculations are pure functions (`calculateVoteAnalytics`).
-5. **Type Safety ("Any is the Enemy"):** Strict TypeScript typing is enforced across all domain boundaries. Avoid `any` or verbose unsafe casting.
-6. **Code Commenting Standards:** Add concise, production-grade comments per logical block (~every 10–15 lines) explaining intent and rationale rather than restating the syntax.
+1. **YAGNI & KISS:** Build only what is needed now. Do not add database tables, complex abstractions, or unneeded dependencies.
+2. **Zero Persistence (Ephemeral Rule):** Sessions live only in browser memory and active WebSocket channels. Do not write room state to Postgres tables or persistent cookies.
+3. **True Blind Voting:** During the `VOTING` state, clients send only `{ hasVoted: true }`. Card numbers stay on the voter's device until the host clicks `REVEAL_VOTES`.
+4. **Separation of Concerns:** Keep UI components focused on layout. State orchestration belongs in hooks (`useScrumSession`, `useVoiceSearch`), and calculations belong in pure functions (`calculateVoteAnalytics`).
+5. **Type Safety:** Strict TypeScript everywhere. No `any` or loose casts.
+6. **Code Comments:** Add short comments per logical block (~every 10-15 lines) explaining intent rather than repeating what the code literally says.
 
 ---
 
-## 📋 Directory Organization
+## Directory Organization
 
 - `apps/web`: Next.js 16 web application.
   - `src/app`: App Router pages (`/` landing, `/room/[code]` arena) and `globals.css`.
   - `src/components/arena`: Sizing arena components (StoryInputBar, FibonacciDeck, PokerTable, AnalyticsPanel).
-  - `src/components/queue`: Asynchronous story queue slide-over drawer.
-  - `src/components/shared`: Header, theme toggle, and profile customization modal.
-  - `src/hooks`: Real-time state orchestration and speech recognition hooks.
+  - `src/components/queue`: Story queue slide-over drawer.
+  - `src/components/shared`: Header, theme toggle, and profile modal.
+  - `src/hooks`: Real-time session state and speech recognition hooks.
   - `src/types`: Domain models (`scrum.ts`) and W3C Web Speech typings (`speech.d.ts`).
-  - `src/utils`: Pure calculation engines, persona generator, procedural sound synth, and Supabase client.
-- `docs/`: Centralized single-source-of-truth technical documentation.
+  - `src/utils`: Math functions, persona generator, procedural sound synth, and Supabase client.
+- `docs/`: Technical documentation.
 
 ---
 
-## ⚡ Key Commands
+## Key Commands
 
-Run all commands from the **workspace root**:
+Run from the repository root:
 
 | Command | Action |
 | :--- | :--- |
 | `pnpm dev` | Starts local Next.js dev server (`next dev --turbo`). |
-| `pnpm build` | Executes production Next.js build (`next build`). |
-| `pnpm test` | Runs Vitest unit and integration test suite. |
-| `pnpm check-types` | Executes strict TypeScript check (`tsc --noEmit`). |
-| `pnpm lint` | Runs ESLint 9 across all packages. |
-| `pnpm pages:build` | Compiles edge worker via OpenNext Cloudflare. |
-| `pnpm format` | Formats codebase with Prettier. |
+| `pnpm build` | Production Next.js build (`next build`). |
+| `pnpm test` | Runs Vitest test suite. |
+| `pnpm check-types` | Strict TypeScript check (`tsc --noEmit`). |
+| `pnpm lint` | Runs ESLint 9. |
+| `pnpm pages:build` | Builds Cloudflare worker via OpenNext. |
+| `pnpm format` | Formats files with Prettier. |
 
 ---
 
-## 🔒 Operational Constraints for AI Agents
+## Operational Constraints for AI Agents
 
 - **Command Syntax:** Stack terminal commands using `;` (never `&&` on Windows PowerShell).
-- **Non-Destructive Documentation:** When modifying or syncing docs in `/docs/`, refine currency without stripping historical detail or completed milestones.
-- **Verification Mandate:** Never conclude a task without verifying code health via `pnpm check-types`, `pnpm lint`, and `pnpm test`.
+- **Documentation Updates:** When updating docs in `/docs/`, keep existing technical facts intact while refining for clarity.
+- **Verification:** Always verify code changes with `pnpm check-types`, `pnpm lint`, and `pnpm test` before finishing a task.

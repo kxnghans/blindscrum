@@ -1,76 +1,68 @@
-# Backend & Ephemeral Infrastructure Strategy: BlindScrum
+# Real-Time & Ephemeral Backend Strategy: BlindScrum
+
+This document describes how BlindScrum handles real-time sync, edge deployment, and zero-persistence state.
 
 ---
 
-## 1. Zero-Persistence Philosophy
+## 1. Zero Persistence
 
-BlindScrum enforces a strict **Zero-Persistence** architectural model:
+BlindScrum intentionally has no database:
 
-- **No Database Tables:** Unlike traditional estimation tools that store rooms, user accounts, and voting logs indefinitely in PostgreSQL or DynamoDB, BlindScrum persists **zero records**.
-- **In-Memory Channel State:** Rooms exist exclusively in WebSocket channel memory while active. When the last participant leaves the room, the channel closes and all associated state evaporates.
-- **Privacy & Compliance:** Eliminates GDPR, CCPA, and enterprise compliance exposure. Ticket titles, engineer identities, and estimation histories never touch persistent storage.
-
----
-
-## 2. Real-Time Transport Infrastructure
-
-Real-time synchronization is delivered through **Supabase Realtime** clusters utilizing WebSockets.
-
-### 2.1 Connection Topology
-```text
-Client Browser <--(WSS / Secure WebSocket)--> Supabase Realtime Cluster
-                                                    │
-                                                    ├── Presence Channel (blindscrum:CODE)
-                                                    └── Broadcast Channel (scrum_event)
-```
-
-### 2.2 Presence Subsystem
-- Used exclusively for peer discovery and active participant heartbeats.
-- Heartbeat frequency: Managed automatically by Supabase Realtime client protocol.
-- On disconnect, the cluster emits a `presence:sync` event to all connected peers, triggering instant removal of the disconnected member from the live poker table.
-
-### 2.3 Broadcast Subsystem
-- Emits real-time state change events (`UPDATE_TITLE`, `CAST_BLIND_VOTE`, `REVEAL_VOTES`, `NEXT_STORY`).
-- Rate limiting: Client configured with `eventsPerSecond: 10` to prevent event flooding or denial-of-service spamming during rapid typing.
-
-### 2.4 Same-Device Local Fallback
-- In offline environments or development setups without external network access, the system initializes a browser-native `BroadcastChannel("blindscrum_[CODE]")`.
-- Allows multiple browser windows, tabs, or incognito profiles on the same device to synchronize in real-time without credentials.
+- **No tables:** We do not create PostgreSQL, SQLite, or KV tables for rooms, votes, or users.
+- **In-memory state:** State lives in the WebSocket connection while people are in the room. When the last person leaves, the channel closes and the data is gone.
+- **No data retention concerns:** We don't store user emails, names, or sprint tickets, avoiding GDPR and data privacy compliance issues.
 
 ---
 
-## 3. Edge Runtime & Cloudflare Pages Deployment
+## 2. Real-Time Transport
 
-BlindScrum is optimized for deployment to **Cloudflare Pages / Workers** using the OpenNext Cloudflare adapter.
+All sync happens through **Supabase Realtime** over WebSockets, using public anonymous publishable keys.
 
-### 3.1 Wrangler Configuration (`apps/web/wrangler.toml`)
-- **Compatibility Date:** `2024-09-23`
-- **Compatibility Flags:** `["nodejs_compat"]`
-- **Worker Entry Point:** `.open-next/worker.js`
-- **Static Assets Binding:** `.open-next/assets` bound to `ASSETS`
+### 2.1 Presence
+- Tracks who is currently in the room.
+- Heartbeats maintain active client status.
+- When someone closes their tab, Supabase emits a presence change, and the table removes their seat immediately.
 
-### 3.2 OpenNext Build Lifecycle
+### 2.2 Broadcast Channels
+- Sends events (`UPDATE_TITLE`, `CAST_BLIND_VOTE`, `REVEAL_VOTES`, `NEXT_STORY`).
+- Rate-limited to 10 events per second on the client to avoid spamming the channel during fast typing.
+
+### 2.3 Same-Device Fallback
+- For local testing or offline environments, the app connects to a native `BroadcastChannel("blindscrum_[CODE]")`.
+- This lets you open three browser tabs on your computer and test voting with no internet connection required.
+
+---
+
+## 3. Edge Deployment (Cloudflare Pages)
+
+The app builds for **Cloudflare Pages / Workers** via OpenNext.
+
+### 3.1 Wrangler Settings (`apps/web/wrangler.toml`)
+- Compatibility date: `2024-09-23`
+- Flag: `nodejs_compat`
+- Entry point: `.open-next/worker.js`
+- Static assets directory: `.open-next/assets`
+
+### 3.2 Build Command
 ```bash
-# 1. Turborepo triggers OpenNext build pipeline
+# Build edge assets
 pnpm --filter web run pages:build
 
-# 2. Next.js creates standalone build in .next/
-# 3. opennextjs-cloudflare bundles edge worker into .open-next/
-# 4. Deploy assets to Cloudflare edge network
+# Deploy with wrangler
 pnpm --filter web run pages:deploy
 ```
 
 ---
 
-## 4. Security, Sanitization & Boundary Defense
+## 4. Security & Sanitization
 
-1. **Blind Vote Masking:**
-   - Numerical estimates are held in client memory during the `VOTING` state.
-   - Payloads transmitted across the wire during voting are restricted to `{ participantId, hasVoted: true }`. Network inspection via DevTools reveals no point values until the host triggers `REVEAL_VOTES`.
-2. **Input Boundary Sanitization:**
-   - Story titles: Truncated to 140 characters, stripped of control characters, and escaped by React DOM.
-   - User monikers: Truncated to 28 characters.
-   - Room codes: Normalized to uppercase alphanumeric strings (`[A-Z0-9-]`) between 3 and 16 characters.
-3. **Zero Secret Leakage:**
-   - The application relies exclusively on public anonymous client keys (`NEXT_PUBLIC_SUPABASE_ANON_KEY`).
-   - Service role keys or admin database secrets are strictly prohibited from client bundles.
+1. **Vote Masking:**
+   - During voting, clients only broadcast `{ participantId, hasVoted: true }`.
+   - The selected point number stays in the voter's browser until the host clicks reveal. Inspecting WebSocket traffic in DevTools will not leak other people's estimates.
+2. **Input Bounds:**
+   - Story titles are capped at 140 characters.
+   - Monikers are capped at 28 characters.
+   - Room codes are filtered to alphanumeric and hyphens (`[A-Z0-9-]`).
+3. **No Secret Keys:**
+   - The client only uses `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+   - There are no service role keys or database credentials anywhere in the repository.
