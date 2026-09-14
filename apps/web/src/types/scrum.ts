@@ -95,4 +95,5 @@ export type ScrumBroadcastEvent =
         archivedEstimate?: FibonacciValue | number | null;
       };
     }
-  | { type: "THROW_REACTION"; payload: TableReactionPayload };
+  | { type: "THROW_REACTION"; payload: TableReactionPayload }
+  | { type: "SYNC_REQUEST"; payload: { requesterId: string } };

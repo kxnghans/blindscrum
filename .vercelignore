@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+apps/*/node_modules
+
+# Next.js & Turbo build artifacts
+.next
+apps/*/.next
+.turbo
+apps/*/.turbo
+
+# Version control & local config
+.git
+.github
+.gemini
+
+# Documentation & scratch files
+docs
+scratch
+*.log

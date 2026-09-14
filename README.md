@@ -99,7 +99,8 @@ blindscrum/
 │       │       ├── roomCode.ts            # Room code generator, normalizer, and validator
 │       │       ├── roomCode.test.ts       # Vitest suite for room code utilities
 │       │       ├── soundEffects.ts        # Web Audio API procedural sound synthesis
-│       │       └── supabase.ts            # Realtime client for presence and broadcast
+│       │       ├── p2p.ts                 # WebRTC peer-to-peer session mesh (Trystero Nostr/STUN)
+│       │       └── p2p.test.ts            # Vitest suite for P2P room utilities
 │       ├── eslint.config.mjs              # ESLint 9 configuration
 │       ├── next.config.ts                 # Next.js configuration
 │       ├── package.json                   # Web app dependencies and scripts

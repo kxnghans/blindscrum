@@ -1,38 +1,40 @@
-# Real-Time & Ephemeral Backend Strategy: BlindScrum
+# Real-Time & Ephemeral Architecture: BlindScrum
 
-This document describes how BlindScrum handles real-time sync, edge deployment, and zero-persistence state.
+This document describes how BlindScrum handles real-time sync, edge deployment, and zero-persistence state via WebRTC Peer-to-Peer (P2P).
 
 ---
 
-## 1. Zero Persistence
+## 1. Zero Persistence & Zero Backend
 
-BlindScrum intentionally has no database:
+BlindScrum intentionally has no database and requires no dedicated backend server:
 
-- **No tables:** We do not create PostgreSQL, SQLite, or KV tables for rooms, votes, or users.
-- **In-memory state:** State lives in the WebSocket connection while people are in the room. When the last person leaves, the channel closes and the data is gone.
+- **No tables or databases:** We do not create PostgreSQL, SQLite, or KV tables for rooms, votes, or users.
+- **In-memory peer state:** State lives strictly in the browser memory and active WebRTC DataChannels while people are in the room. When the last person leaves, the session ceases to exist.
 - **No data retention concerns:** We don't store user emails, names, or sprint tickets, avoiding GDPR and data privacy compliance issues.
+- **No external account dependency:** Room connections use open WebRTC protocols with public Nostr relay signaling and STUN, requiring zero API keys.
 
 ---
 
-## 2. Real-Time Transport
+## 2. Real-Time Transport (WebRTC P2P)
 
-All sync happens through **Supabase Realtime** over WebSockets, using public anonymous publishable keys.
+All multi-client real-time synchronization happens directly peer-to-peer using **WebRTC DataChannels** orchestrated via **Trystero** (with public Nostr relay signaling and free STUN servers).
 
-### 2.1 Presence
+### 2.1 WebRTC Peer Discovery & Presence
 
-- Tracks who is currently in the room.
-- Heartbeats maintain active client status.
-- When someone closes their tab, Supabase emits a presence change, and the table removes their seat immediately.
+- When a user enters `/room/[CODE]`, the client initializes a scoped P2P room (`blindscrum-[roomCode]`).
+- Clients discover peers via public Nostr signaling relays and establish direct, low-latency, encrypted WebRTC DataChannel connections.
+- Peer join events prompt mutual exchange of user profiles (`ScrumUser`) and initial room state sync (`SYNC_REQUEST` / `SYNC_RESPONSE`).
+- Peer leave events immediately evict the disconnected seat from the table. If the host leaves, host controls gracefully hand off to the participant with the earliest `joinedAt` timestamp.
 
-### 2.2 Broadcast Channels
+### 2.2 P2P Action Channels
 
-- Sends events (`UPDATE_TITLE`, `CAST_BLIND_VOTE`, `REVEAL_VOTES`, `NEXT_STORY`, `THROW_REACTION`).
-- Rate-limited to 10 events per second on the client to avoid spamming the channel during fast typing.
+- High-frequency events (`UPDATE_TITLE`, `CAST_BLIND_VOTE`, `REVEAL_VOTES`, `NEXT_STORY`, `THROW_REACTION`, `ADD_QUEUE_ITEM`, `REMOVE_QUEUE_ITEM`, `REORDER_QUEUE`) stream directly over WebRTC DataChannels.
+- Event payloads are strongly typed and serialized as JSON strings to maintain protocol integrity across browser runtimes.
 
-### 2.3 Same-Device Fallback
+### 2.3 Same-Device Offline Fallback
 
-- For local testing or offline environments, the app connects to a native `BroadcastChannel("blindscrum_[CODE]")`.
-- This lets you open three browser tabs on your computer and test voting with no internet connection required.
+- For local testing or offline environments on a single machine, the app runs an automatic native `BroadcastChannel("blindscrum_[CODE]")` alongside P2P.
+- Multiple browser tabs on the same laptop can estimate and vote seamlessly even with no active internet connection.
 
 ---
 
@@ -58,9 +60,9 @@ pnpm build
 pnpm deploy
 ```
 
-### 3.3 Ephemeral State at the Edge
+### 3.3 Static Edge Distribution
 
-Because all estimation rooms and votes live strictly in client memory and Supabase Realtime WebSocket connections, the hosting layer acts purely as an edge asset distributor and serverless HTML streamer. There are no server-side sessions, cookies, or stateful nodes to manage.
+Because all estimation rooms, queue buffers, and votes live strictly in client memory and direct browser-to-browser WebRTC DataChannels, the Vercel hosting layer acts purely as an edge asset distributor and serverless HTML streamer. There are zero stateful server nodes, no server-side sessions, and no third-party database bills.
 
 ---
 
@@ -68,11 +70,11 @@ Because all estimation rooms and votes live strictly in client memory and Supaba
 
 1. **Vote Masking:**
    - During voting, clients only broadcast `{ participantId, hasVoted: true }`.
-   - The selected point number stays in the voter's browser until the host clicks reveal. Inspecting WebSocket traffic in DevTools will not leak other people's estimates.
+   - The selected point number stays in the voter's browser memory until the host triggers a reveal. Inspecting WebRTC packet logs will not leak estimates before the reveal.
 2. **Input Bounds:**
    - Story titles are capped at 140 characters.
    - Monikers are capped at 28 characters.
    - Room codes are filtered to alphanumeric and hyphens (`[A-Z0-9-]`).
-3. **No Secret Keys:**
-   - The client only uses `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-   - There are no service role keys or database credentials anywhere in the repository.
+3. **Zero Secret Keys:**
+   - There are no database credentials, service role keys, or API tokens anywhere in the repository.
+   - The application runs 100% autonomously in the browser with zero external SaaS lock-in.

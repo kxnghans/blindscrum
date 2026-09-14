@@ -11,7 +11,7 @@
 - **Persona Generator**: Built a generator in [apps/web/src/utils/persona.ts](../apps/web/src/utils/persona.ts) that creates two-word agile names and deterministic inline SVG avatars.
 - **Room Codes & Deep Links**: Built room code generation (`SCRUM-492`), dynamic routing (`/room/[code]`), and `?room=[code]` link joining in [apps/web/src/app/page.tsx](../apps/web/src/app/page.tsx) and [apps/web/src/app/room/[code]/page.tsx](../apps/web/src/app/room/[code]/page.tsx).
 - **Link Sharing**: Added a copy-link button in the header with Sonner toast feedback in [apps/web/src/components/shared/RoomHeader.tsx](../apps/web/src/components/shared/RoomHeader.tsx).
-- **Real-Time Session Hook**: Built an in-memory session hook using Supabase presence and broadcast channels (with local `BroadcastChannel` fallback) in [apps/web/src/hooks/useScrumSession.ts](../apps/web/src/hooks/useScrumSession.ts).
+- **Real-Time Session Hook**: Built an in-memory session hook using WebRTC P2P DataChannels and Trystero Nostr/STUN signaling (with local `BroadcastChannel` fallback) in [apps/web/src/hooks/useScrumSession.ts](../apps/web/src/hooks/useScrumSession.ts).
 - **Presence & Host Handoff**: Connected members show up on the table in real-time. If the host leaves, the next oldest participant takes over host controls.
 - **Secret Voting**: Clients only broadcast `{ hasVoted: true }` during the vote. Card numbers stay on the device until the host clicks reveal.
 - **Voice Mic Hook**: Built a speech-to-text hook with the Web Speech API, interim text preview, and 2-second silence cutoff in [apps/web/src/hooks/useVoiceSearch.ts](../apps/web/src/hooks/useVoiceSearch.ts).
@@ -39,7 +39,7 @@
   - Add prominent one-click "Randomize Alias" button with dice icon next to display name in `UserProfileModal`.
   - Add welcoming "Join Session" CTA that saves identity and sets configured flag.
 - [x] **Task 2: Real-time Voter Visibility & Presence Tracking**
-  - Sync `hasVoted` state into Supabase presence tracking in `useScrumSession.ts`.
+  - Sync `hasVoted` state into peer presence tracking in `useScrumSession.ts`.
   - Upgrade `PokerTable.tsx` participant avatars with live visual status rings (emerald ring + check badge for voted, amber pulse for pending).
   - Add real-time voter progress indicator and pending roster on the table.
 - [x] **Task 3: In-Flow Story Pipeline & Frictionless Inline Queuing**
@@ -65,3 +65,14 @@
 - [x] **Task 8: Stability Verification & Documentation Update**
   - Run `pnpm check-types`, `pnpm lint`, `pnpm test`, and `pnpm build`.
   - Update `docs/checklist.md`, `docs/architecture.md`, `docs/blindscrum.md`, and `docs/browser-test.md`.
+- [x] **Task 9: Pure WebRTC P2P Migration & Complete Supabase Decoupling**
+  - Removed `@supabase/supabase-js` and deleted `apps/web/src/utils/supabase.ts`.
+  - Implemented `createP2PSession` in `apps/web/src/utils/p2p.ts` using `trystero` with public Nostr signaling and STUN relays.
+  - Added unit test suite `apps/web/src/utils/p2p.test.ts`.
+  - Migrated `useScrumSession.ts` to direct WebRTC peer connections with automated peer profile handshake and host state synchronization.
+  - Updated all architecture, backend, and security documentation to reflect zero-backend P2P design.
+- [x] **Task 10: Production Vercel Deployment & Multi-Client Verification**
+  - Deployed to Vercel production at `https://blindscrum.vercel.app` (Aliased from deployment `dpl_Baxt3ejxF9jnjmriPa9TPXWBkdbY`).
+  - Verified zero-backend P2P execution with WebRTC DataChannels and local BroadcastChannel fallback.
+  - Linked GitHub repository `kxnghans/blindscrum` to Vercel continuous deployment.
+  - Committed and pushed production build to `origin/main`.

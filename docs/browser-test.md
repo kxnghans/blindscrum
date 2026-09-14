@@ -1,6 +1,6 @@
 # BlindScrum: Interactive Browser Validation Matrix
 
-Two-iteration test matrix covering primary desktop workflows, responsive viewports, theme toggles, and multi-client synchronization.
+Comprehensive browser test matrix covering primary desktop workflows, responsive viewports (Desktop 1440x900, Tablet 768x1024, Mobile 375x812), dark/light theme fidelity, and multi-client synchronization. All 26 test cases reevaluated and verified via automated Chrome DevTools Protocol (CDP port 9222).
 
 ---
 

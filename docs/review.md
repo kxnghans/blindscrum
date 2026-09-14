@@ -36,14 +36,14 @@ BlindScrum has a simple security model because it has no database. It does not s
 
 - **Risk:** Leaking database admin keys or private service role tokens in client JavaScript bundles.
 - **Defense:**
-  - The client only uses the public anonymous key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`).
-  - There are no database tables, so even with this key, an attacker cannot read or write table data.
+  - BlindScrum uses zero secret keys and zero database tokens.
+  - The application is completely serverless and peer-to-peer via WebRTC (Trystero Nostr/STUN), with no third-party accounts, credentials, or backend API keys in the client bundle.
 
 ### 2.4 Event Flooding
 
-- **Risk:** A script spams the WebSocket connection with events to crash other players' browsers.
+- **Risk:** A script spams peer connections with events to crash other players' browsers.
 - **Defense:**
-  - The Supabase client throttles outgoing events to 10 events per second.
+  - WebRTC DataChannels transmit peer-to-peer with lightweight JSON payloads. Event types and bounds are validated upon receipt, ignoring malformed payloads.
 
 ### 2.5 Microphone Privacy
 

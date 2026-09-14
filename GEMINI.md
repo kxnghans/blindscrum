@@ -12,7 +12,7 @@ BlindScrum is a planning poker tool for engineering teams. It stops people from 
 - **Web Framework:** Next.js 16 (App Router), React 19
 - **Language:** TypeScript (Strict mode, no `any`)
 - **Styling:** Tailwind CSS v4 (`@tailwindcss/postcss`), CSS custom properties
-- **State & Realtime:** Ephemeral Supabase Realtime Broadcast & Presence with local `BroadcastChannel` fallback
+- **State & Realtime:** WebRTC DataChannels (Trystero Nostr/STUN) with local `BroadcastChannel` fallback
 - **Speech Engine:** Browser W3C `SpeechRecognition` / `webkitSpeechRecognition`
 - **Testing:** Vitest
 - **Deployment:** Vercel (Native zero-config Next.js App Router deployment)
@@ -39,7 +39,7 @@ BlindScrum is a planning poker tool for engineering teams. It stops people from 
   - `src/components/shared`: Header, theme toggle, and profile modal.
   - `src/hooks`: Real-time session state and speech recognition hooks.
   - `src/types`: Domain models (`scrum.ts`) and W3C Web Speech typings (`speech.d.ts`).
-  - `src/utils`: Math functions, persona generator, procedural sound synth, and Supabase client.
+  - `src/utils`: Math functions, persona generator, procedural sound synth, and WebRTC P2P session manager.
 - `docs/`: Technical documentation.
 
 ---

@@ -32,11 +32,12 @@ BlindScrum is a Turborepo monorepo with a single web package:
 
 ## 3. Real-Time Events
 
-The app syncs via Supabase Realtime WebSocket channels (`blindscrum:[roomCode]`). It also creates a local `BroadcastChannel` so multiple tabs on the same laptop can test without internet access.
+The app syncs peer-to-peer via WebRTC DataChannels orchestrated by Trystero (with public Nostr relay signaling and free STUN). It also creates a local `BroadcastChannel` so multiple tabs on the same laptop can test without internet access.
 
-### 3.1 Presence
+### 3.1 Presence & Peer Discovery
 
-- Presence tracks connected participants and heartbeat status.
+- Peers discover each other via public Nostr relays and establish direct WebRTC DataChannels.
+- Peer presence tracks connected participants with mutual profile sync and automatic disconnect handling.
 - Keyed by `currentUser.id`.
 - The participant with the earliest `joinedAt` timestamp acts as the host. If that tab closes, the next oldest participant takes over host controls.
 

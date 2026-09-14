@@ -1,13 +1,12 @@
 /**
  * @file useScrumSession.ts
  * @description Master orchestration hook for ephemeral real-time BlindScrum sessions.
- * Combines Supabase Realtime Broadcast & Presence with local BroadcastChannel failover.
- * Zero database persistence, pure in-memory websocket sync, true blind voting, and async queue.
+ * Uses serverless WebRTC Peer-to-Peer data channels with local BroadcastChannel failover.
+ * Zero database persistence, true blind voting, decentralized peer state synchronization, and async queue.
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import confetti from "canvas-confetti";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   type FibonacciValue,
   type Participant,
@@ -16,12 +15,13 @@ import {
   type StoryQueueItem,
   type CompletedStory,
   type ScrumBroadcastEvent,
+  type ScrumRoomState,
   type TableReactionType,
   type TableReactionPayload,
 } from "@/types/scrum";
 import { generateRandomScrumAlias, generateScrumAvatar } from "@/utils/persona";
 import { calculateVoteAnalytics } from "@/utils/analytics";
-import { getRealtimeClient } from "@/utils/supabase";
+import { createP2PSession, type P2PSession } from "@/utils/p2p";
 import {
   playCardSelectSound,
   playRevealSound,
@@ -98,13 +98,14 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   // Local vote reference held safely on client until reveal
   const mySecretVoteRef = useRef<FibonacciValue | null>(null);
   const localBroadcastRef = useRef<BroadcastChannel | null>(null);
-  const sbChannelRef = useRef<RealtimeChannel | null>(null);
+  const p2pSessionRef = useRef<P2PSession | null>(null);
+  const peerPersonasRef = useRef<Map<string, Participant>>(new Map());
 
-  // Ref for latest state to respond to state-sync requests
-  const stateRef = useRef({ storyTitle, status, queue, completedStories });
+  // Ref for latest state to respond to state-sync requests from new peers
+  const stateRef = useRef({ storyTitle, status, queue, completedStories, participants });
   useEffect(() => {
-    stateRef.current = { storyTitle, status, queue, completedStories };
-  }, [storyTitle, status, queue, completedStories]);
+    stateRef.current = { storyTitle, status, queue, completedStories, participants };
+  }, [storyTitle, status, queue, completedStories, participants]);
 
   // Determine if current user is the host (earliest joined participant or sole member)
   const isHost = useMemo(() => {
@@ -146,10 +147,10 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
     return calculateVoteAnalytics(voteValues);
   }, [status, revealedVotes]);
 
-  // Broadcast dispatch helper (dispatches to both Supabase channel and local BroadcastChannel)
+  // Broadcast dispatch helper (dispatches to both P2P WebRTC data channels and local BroadcastChannel)
   const broadcast = useCallback(
     (event: ScrumBroadcastEvent) => {
-      // Local BroadcastChannel for multi-tab testing
+      // Local BroadcastChannel for multi-tab testing on the same browser
       if (localBroadcastRef.current) {
         try {
           localBroadcastRef.current.postMessage(event);
@@ -158,45 +159,56 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         }
       }
 
-      // Supabase Realtime broadcast
-      const client = getRealtimeClient();
-      if (client) {
-        const channel = client.channel(`blindscrum:${roomCode}`);
-        channel.send({
-          type: "broadcast",
-          event: "scrum_event",
-          payload: event,
-        });
+      // WebRTC P2P DataChannel broadcast
+      if (p2pSessionRef.current) {
+        p2pSessionRef.current.broadcast(event);
       }
     },
-    [roomCode],
+    [],
   );
 
   // Incoming event router
-  const handleIncomingEvent = useCallback((event: ScrumBroadcastEvent) => {
-    switch (event.type) {
-      case "UPDATE_TITLE":
-        setStoryTitleState(event.payload.title);
-        break;
+  const handleIncomingEvent = useCallback(
+    (event: ScrumBroadcastEvent) => {
+      switch (event.type) {
+        case "UPDATE_TITLE":
+          setStoryTitleState(event.payload.title);
+          break;
 
-      case "CAST_BLIND_VOTE":
-        setParticipants((prev) =>
-          prev.map((p) =>
-            p.id === event.payload.participantId
-              ? { ...p, hasVoted: event.payload.hasVoted }
-              : p,
-          ),
-        );
-        break;
+        case "CAST_BLIND_VOTE":
+          setParticipants((prev) =>
+            prev.map((p) =>
+              p.id === event.payload.participantId
+                ? { ...p, hasVoted: event.payload.hasVoted }
+                : p,
+            ),
+          );
+          break;
 
-      case "REVEAL_VOTES":
-        setStatus("REVEALED");
-        setRevealedVotes(event.payload.votes);
-        playRevealSound();
+        case "REVEAL_VOTES": {
+          setStatus("REVEALED");
+          const mergedVotes = {
+            ...event.payload.votes,
+            ...(mySecretVoteRef.current !== null
+              ? { [currentUser.id]: mySecretVoteRef.current }
+              : {}),
+          };
+          setRevealedVotes(mergedVotes);
+          playRevealSound();
 
-        // Check for full team consensus celebration
-        {
-          const votesList = Object.values(event.payload.votes);
+          // If local secret vote differed or was missing from incoming bundle, rebroadcast merged votes
+          if (
+            mySecretVoteRef.current !== null &&
+            event.payload.votes[currentUser.id] !== mySecretVoteRef.current
+          ) {
+            broadcast({
+              type: "REVEAL_VOTES",
+              payload: { votes: mergedVotes },
+            });
+          }
+
+          // Check for full team consensus celebration
+          const votesList = Object.values(mergedVotes);
           const calculated = calculateVoteAnalytics(votesList);
           if (calculated.hasConsensus && calculated.totalVotes >= 2) {
             playConsensusSound();
@@ -208,90 +220,120 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
               });
             }
           }
+          break;
         }
-        break;
 
-      case "RESET_ROUND":
-        setStatus("VOTING");
-        setRevealedVotes({});
-        setMyVote(null);
-        mySecretVoteRef.current = null;
-        if (event.payload.storyTitle) {
-          setStoryTitleState(event.payload.storyTitle);
-        }
-        setParticipants((prev) =>
-          prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
-        );
-        break;
-
-      case "ADD_QUEUE_ITEM":
-        setQueue((prev) => {
-          if (prev.some((item) => item.id === event.payload.item.id))
-            return prev;
-          return [...prev, event.payload.item];
-        });
-        break;
-
-      case "REMOVE_QUEUE_ITEM":
-        setQueue((prev) => prev.filter((item) => item.id !== event.payload.id));
-        break;
-
-      case "REORDER_QUEUE":
-        setQueue(event.payload.queue);
-        break;
-
-      case "NEXT_STORY":
-        // Archive previous story if estimate exists
-        if (typeof event.payload.archivedEstimate === "number") {
-          const estimateVal = event.payload.archivedEstimate;
-          setCompletedStories((prev) => [
-            {
-              id: `completed_${Date.now()}`,
-              title: stateRef.current.storyTitle,
-              estimate: estimateVal,
-              completedAt: Date.now(),
-            },
-            ...prev,
-          ]);
-        }
-        // Promote next story from queue
-        setStoryTitleState(event.payload.nextStory.title);
-        setQueue((prev) =>
-          prev.filter((item) => item.id !== event.payload.nextStory.id),
-        );
-        setStatus("VOTING");
-        setRevealedVotes({});
-        setMyVote(null);
-        mySecretVoteRef.current = null;
-        setParticipants((prev) =>
-          prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
-        );
-        break;
-
-      case "SYNC_STATE":
-        setStoryTitleState(event.payload.storyTitle);
-        setStatus(event.payload.status);
-        setQueue(event.payload.queue);
-        setCompletedStories(event.payload.completedStories);
-        break;
-
-      case "THROW_REACTION":
-        playReactionSound(event.payload.type);
-        setActiveReactions((prev) => [...prev.slice(-15), event.payload]);
-        setTimeout(() => {
-          setActiveReactions((prev) =>
-            prev.filter((r) => r.id !== event.payload.id),
+        case "RESET_ROUND":
+          setStatus("VOTING");
+          setRevealedVotes({});
+          setMyVote(null);
+          mySecretVoteRef.current = null;
+          if (event.payload.storyTitle) {
+            setStoryTitleState(event.payload.storyTitle);
+          }
+          setParticipants((prev) =>
+            prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
           );
-        }, 3000);
-        break;
-    }
-  }, []);
+          break;
 
-  // Setup Realtime & Broadcast channels
+        case "ADD_QUEUE_ITEM":
+          setQueue((prev) => {
+            if (prev.some((item) => item.id === event.payload.item.id))
+              return prev;
+            return [...prev, event.payload.item];
+          });
+          break;
+
+        case "REMOVE_QUEUE_ITEM":
+          setQueue((prev) => prev.filter((item) => item.id !== event.payload.id));
+          break;
+
+        case "REORDER_QUEUE":
+          setQueue(event.payload.queue);
+          break;
+
+        case "NEXT_STORY":
+          // Archive previous story if estimate exists
+          if (typeof event.payload.archivedEstimate === "number") {
+            const estimateVal = event.payload.archivedEstimate;
+            setCompletedStories((prev) => [
+              {
+                id: `completed_${Date.now()}`,
+                title: stateRef.current.storyTitle,
+                estimate: estimateVal,
+                completedAt: Date.now(),
+              },
+              ...prev,
+            ]);
+          }
+          // Promote next story from queue
+          setStoryTitleState(event.payload.nextStory.title);
+          setQueue((prev) =>
+            prev.filter((item) => item.id !== event.payload.nextStory.id),
+          );
+          setStatus("VOTING");
+          setRevealedVotes({});
+          setMyVote(null);
+          mySecretVoteRef.current = null;
+          setParticipants((prev) =>
+            prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
+          );
+          break;
+
+        case "SYNC_REQUEST":
+          // Host peer fulfills sync request for newcomer
+          if (isHost) {
+            const snapshot: ScrumRoomState = {
+              roomCode,
+              storyTitle: stateRef.current.storyTitle,
+              status: stateRef.current.status,
+              participants: stateRef.current.participants,
+              queue: stateRef.current.queue,
+              completedStories: stateRef.current.completedStories,
+            };
+            broadcast({ type: "SYNC_STATE", payload: snapshot });
+          }
+          break;
+
+        case "SYNC_STATE":
+          setStoryTitleState(event.payload.storyTitle);
+          setStatus(event.payload.status);
+          setQueue(event.payload.queue);
+          setCompletedStories(event.payload.completedStories);
+          if (event.payload.participants && event.payload.participants.length > 0) {
+            setParticipants((prev) => {
+              const map = new Map<string, Participant>();
+              map.set(currentUser.id, currentUser);
+              for (const p of event.payload.participants) {
+                if (p.id !== currentUser.id) map.set(p.id, p);
+              }
+              for (const p of prev) {
+                if (!map.has(p.id)) map.set(p.id, p);
+              }
+              return Array.from(map.values());
+            });
+          }
+          break;
+
+        case "THROW_REACTION":
+          playReactionSound(event.payload.type);
+          setActiveReactions((prev) => [...prev.slice(-15), event.payload]);
+          setTimeout(() => {
+            setActiveReactions((prev) =>
+              prev.filter((r) => r.id !== event.payload.id),
+            );
+          }, 3000);
+          break;
+      }
+    },
+    [broadcast, currentUser, isHost, roomCode],
+  );
+
+  // Setup WebRTC P2P Session & local BroadcastChannel
   useEffect(() => {
     if (!roomCode) return;
 
-    // 1. Setup local BroadcastChannel
+    // 1. Setup local BroadcastChannel for same-device multi-tab testing
     const channelName = `blindscrum_${roomCode}`;
     const bc = new BroadcastChannel(channelName);
     localBroadcastRef.current = bc;
@@ -302,84 +344,49 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       }
     };
 
-    // 2. Setup Supabase Realtime channel
-    const client = getRealtimeClient();
-    let sbChannel: RealtimeChannel | null = null;
-
-    if (client) {
-      sbChannel = client.channel(`blindscrum:${roomCode}`, {
-        config: {
-          presence: { key: currentUser.id },
-          broadcast: { ack: false },
-        },
-      });
-      sbChannelRef.current = sbChannel;
-
-      // Handle presence sync (who is currently in the room)
-      sbChannel.on("presence", { event: "sync" }, () => {
-        const state = sbChannel?.presenceState<{
-          id: string;
-          name: string;
-          avatar: string;
-          hasVoted: boolean;
-          joinedAt: number;
-        }>();
-
-        if (state) {
-          const presentParticipants: Participant[] = [];
-          for (const key in state) {
-            const presences = state[key];
-            if (presences && presences[0]) {
-              const p = presences[0];
-              presentParticipants.push({
-                id: p.id,
-                name: p.name,
-                avatar: p.avatar,
-                role: "voter",
-                hasVoted: p.hasVoted,
-                vote: null,
-                joinedAt: p.joinedAt,
-              });
-            }
-          }
+    // 2. Setup serverless WebRTC P2P data channels via Trystero
+    const peerPersonas = peerPersonasRef.current;
+    const p2p = createP2PSession({
+      roomCode,
+      currentUser,
+      onEvent: (event) => {
+        handleIncomingEvent(event);
+      },
+      onPeerJoin: () => {
+        setIsConnected(true);
+        // Request room state sync from existing peers
+        p2p?.broadcast({
+          type: "SYNC_REQUEST",
+          payload: { requesterId: currentUser.id },
+        });
+      },
+      onPeerLeave: (peerId) => {
+        const departing = peerPersonas.get(peerId);
+        if (departing) {
+          peerPersonas.delete(peerId);
+          setParticipants((prev) => prev.filter((p) => p.id !== departing.id));
+        }
+      },
+      onPeerPersona: (peerId, participant) => {
+        if (participant.id !== currentUser.id) {
+          peerPersonas.set(peerId, participant);
           setParticipants((prev) => {
-            // Keep local voted flags or use presence hasVoted
-            return presentParticipants.map((p) => {
-              const match = prev.find((x) => x.id === p.id);
-              return { ...p, hasVoted: p.hasVoted || Boolean(match?.hasVoted) };
-            });
+            const others = prev.filter((p) => p.id !== participant.id);
+            return [...others, participant];
           });
         }
-      });
+      },
+    });
 
-      // Handle peer broadcast events
-      sbChannel.on("broadcast", { event: "scrum_event" }, ({ payload }) => {
-        if (payload) {
-          handleIncomingEvent(payload as ScrumBroadcastEvent);
-        }
-      });
-
-      // Subscribe and track presence
-      sbChannel.subscribe((statusResult) => {
-        if (statusResult === "SUBSCRIBED") {
-          setIsConnected(true);
-          sbChannel?.track({
-            id: currentUser.id,
-            name: currentUser.name,
-            avatar: currentUser.avatar,
-            hasVoted: false,
-            joinedAt: currentUser.joinedAt,
-          });
-        }
-      });
-    }
+    p2pSessionRef.current = p2p;
 
     return () => {
       bc.close();
-      if (sbChannel) {
-        sbChannel.unsubscribe();
+      if (p2p) {
+        p2p.destroy();
       }
-      sbChannelRef.current = null;
+      p2pSessionRef.current = null;
+      peerPersonas.clear();
     };
   }, [roomCode, currentUser, handleIncomingEvent]);
 
@@ -406,22 +413,13 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         ),
       );
 
-      // Track voted state in presence
-      sbChannelRef.current?.track({
-        id: currentUser.id,
-        name: currentUser.name,
-        avatar: currentUser.avatar,
-        hasVoted: true,
-        joinedAt: currentUser.joinedAt,
-      });
-
-      // Broadcast masked vote token across network
+      // Broadcast masked vote token across P2P network
       broadcast({
         type: "CAST_BLIND_VOTE",
         payload: { participantId: currentUser.id, hasVoted: true },
       });
     },
-    [currentUser, broadcast],
+    [currentUser.id, broadcast],
   );
 
   const revealVotes = useCallback(() => {
@@ -431,7 +429,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       collected[currentUser.id] = mySecretVoteRef.current;
     }
 
-    // Include other participants' votes if already known or mock/broadcasted
+    // Include other participants' votes if already known or broadcasted
     participants.forEach((p) => {
       if (p.id === currentUser.id && mySecretVoteRef.current) {
         collected[p.id] = mySecretVoteRef.current;
@@ -465,21 +463,12 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
       );
 
-      // Reset voting state in presence
-      sbChannelRef.current?.track({
-        id: currentUser.id,
-        name: currentUser.name,
-        avatar: currentUser.avatar,
-        hasVoted: false,
-        joinedAt: currentUser.joinedAt,
-      });
-
       broadcast({
         type: "RESET_ROUND",
         payload: { storyTitle: newTitle },
       });
     },
-    [currentUser, broadcast],
+    [broadcast],
   );
 
   const addToQueue = useCallback(
@@ -544,15 +533,6 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
     );
 
-    // Reset voting state in presence for next story
-    sbChannelRef.current?.track({
-      id: currentUser.id,
-      name: currentUser.name,
-      avatar: currentUser.avatar,
-      hasVoted: false,
-      joinedAt: currentUser.joinedAt,
-    });
-
     broadcast({
       type: "NEXT_STORY",
       payload: {
@@ -560,7 +540,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         archivedEstimate,
       },
     });
-  }, [queue, analytics, storyTitle, currentUser, broadcast]);
+  }, [queue, analytics, storyTitle, broadcast]);
 
   const updateUserProfile = useCallback(
     (newName: string, newAvatar?: string) => {
@@ -578,20 +558,14 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         JSON.stringify(updated),
       );
 
-      // Track updated identity in presence
-      sbChannelRef.current?.track({
-        id: updated.id,
-        name: updated.name,
-        avatar: updated.avatar,
-        hasVoted: myVote !== null,
-        joinedAt: updated.joinedAt,
-      });
+      // Broadcast updated persona across P2P data channels
+      p2pSessionRef.current?.broadcastPersona(updated);
 
       setParticipants((prev) =>
         prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)),
       );
     },
-    [currentUser, roomCode, myVote],
+    [currentUser, roomCode],
   );
 
   const sendReaction = useCallback(

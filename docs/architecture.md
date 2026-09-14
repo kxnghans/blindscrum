@@ -6,7 +6,7 @@ This document outlines the architecture, real-time protocols, state machine tran
 
 ## 1. System Overview
 
-BlindScrum runs as a client-side real-time application with no database. State syncs across peers using Supabase Realtime presence and broadcast channels, with a local browser BroadcastChannel fallback for multi-tab testing on the same machine.
+BlindScrum runs as a client-side real-time application with no database. State syncs directly between peers using WebRTC DataChannels orchestrated by Trystero (with public Nostr relay signaling and STUN), with a local browser BroadcastChannel fallback for multi-tab testing on the same machine.
 
 ```mermaid
 flowchart LR
@@ -16,9 +16,9 @@ flowchart LR
         VoterB(["Participant B Browser<br/>Fibonacci Estimation Deck<br/>apps/web/src/app/room/[code]/page.tsx"])
     end
 
-    subgraph RealtimeLayer["Ephemeral Realtime Transport Layer"]
-        SupabasePresence[("Supabase Presence Cluster<br/>Channel: blindscrum:CODE<br/>Peer Discovery & Roles")]
-        SupabaseBroadcast[("Supabase Broadcast Channel<br/>Event: scrum_event<br/>Zero-Persistence PubSub")]
+    subgraph RealtimeLayer["Ephemeral Realtime Transport Layer (P2P)"]
+        NostrSignaling[("Nostr Signaling Relays<br/>Public WebSockets<br/>Peer Discovery & SDP Handshake")]
+        WebRTCData[("WebRTC DataChannels<br/>Direct Peer-to-Peer Mesh<br/>Zero-Persistence Action Stream")]
         LocalBC[("Browser BroadcastChannel<br/>Fallback: blindscrum_CODE<br/>Same-Device Multi-Tab Sync")]
     end
 
@@ -37,8 +37,8 @@ flowchart LR
     VoterA <--> SessionHook
     VoterB <--> SessionHook
 
-    SessionHook <--> SupabasePresence
-    SessionHook <--> SupabaseBroadcast
+    SessionHook <--> NostrSignaling
+    SessionHook <--> WebRTCData
     SessionHook <--> LocalBC
 
     VoiceHook --> SessionHook
@@ -103,7 +103,7 @@ sequenceDiagram
     autonumber
     actor Host as Host Client (Scrum Master)
     actor Voter as Voter Client (Teammate)
-    participant Channel as Ephemeral Channel (blindscrum:CODE)
+    participant Channel as WebRTC P2P DataChannel (blindscrum-[CODE])
 
     Note over Host, Voter: Round Begins in VOTING State
     Host->>Channel: broadcast UPDATE_TITLE ("OAuth2 Migration")
