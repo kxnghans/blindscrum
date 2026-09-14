@@ -1,0 +1,10 @@
+name = "blindscrum"
+compatibility_date = "2024-09-23"
+main = ".open-next/worker.js"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = true
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"

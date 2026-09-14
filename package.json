@@ -1,0 +1,27 @@
+{
+  "name": "blindscrum",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "pages:build": "turbo run pages:build",
+    "deploy": "wrangler deploy -c apps/web/wrangler.toml",
+    "pages:deploy": "pnpm run deploy",
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.0",
+    "wrangler": "^4.65.0"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "overrides": {
+    "@aws-sdk/signature-v4-multi-region": "3.996.45"
+  }
+}
