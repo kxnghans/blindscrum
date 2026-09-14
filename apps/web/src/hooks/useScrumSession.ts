@@ -100,6 +100,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   const localBroadcastRef = useRef<BroadcastChannel | null>(null);
   const p2pSessionRef = useRef<P2PSession | null>(null);
   const peerPersonasRef = useRef<Map<string, Participant>>(new Map());
+  const lastSeenRef = useRef<Map<string, number>>(new Map());
 
   // Ref for latest state to respond to state-sync requests from new peers
   const stateRef = useRef({ storyTitle, status, queue, completedStories, participants });
@@ -355,9 +356,18 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
           }, 3000);
           break;
 
+        case "HEARTBEAT": {
+          const senderId = event.payload.id;
+          if (senderId !== currentUserRef.current.id) {
+            lastSeenRef.current.set(senderId, Date.now());
+          }
+          break;
+        }
+
         case "PEER_ANNOUNCE": {
           const peer = event.payload;
           if (peer.id !== currentUserRef.current.id) {
+            lastSeenRef.current.set(peer.id, Date.now());
             setParticipants((prev) => {
               const exists = prev.some((p) => p.id === peer.id);
               if (!exists) {
@@ -374,6 +384,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         case "PEER_LEAVE": {
           const departingId = event.payload.id;
           if (departingId !== currentUserRef.current.id) {
+            lastSeenRef.current.delete(departingId);
             setParticipants((prev) => prev.filter((p) => p.id !== departingId));
           }
           break;
@@ -446,6 +457,28 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       payload: { requesterId: currentUserRef.current.id },
     });
 
+    // Periodic heartbeat to detect unexpected peer / host network drops
+    const heartbeatInterval = setInterval(() => {
+      const now = Date.now();
+      broadcast({
+        type: "HEARTBEAT",
+        payload: { id: currentUserRef.current.id, timestamp: now },
+      });
+
+      // Sweep peers: if peer has not sent any message or heartbeat in 8s, drop them so mesh failover triggers
+      setParticipants((prev) => {
+        const deadPeers = prev.filter(
+          (p) =>
+            p.id !== currentUserRef.current.id &&
+            lastSeenRef.current.has(p.id) &&
+            now - (lastSeenRef.current.get(p.id) ?? 0) > 8000,
+        );
+        if (deadPeers.length === 0) return prev;
+        deadPeers.forEach((p) => lastSeenRef.current.delete(p.id));
+        return prev.filter((p) => !deadPeers.some((d) => d.id === p.id));
+      });
+    }, 3000);
+
     // Graceful peer departure handler on tab close / reload
     const handleBeforeUnload = () => {
       try {
@@ -462,6 +495,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
+      clearInterval(heartbeatInterval);
       window.removeEventListener("beforeunload", handleBeforeUnload);
       handleBeforeUnload();
       bc.close();

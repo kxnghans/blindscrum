@@ -82,7 +82,9 @@ export function StoryPipeline({
 
   const handleQuickAdd = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const trimmed = quickQueueText.trim();
+    const form = e?.target as HTMLFormElement | undefined;
+    const formVal = form ? (new FormData(form).get("quickQueue") as string | null) : null;
+    const trimmed = (formVal ?? quickQueueText).trim();
     if (!trimmed) {
       toast.error("Type a ticket title to queue.");
       return;
@@ -185,6 +187,7 @@ export function StoryPipeline({
           >
             <input
               type="text"
+              name="quickQueue"
               value={quickQueueText}
               onChange={(e) => setQuickQueueText(e.target.value)}
               placeholder="Queue next ticket..."
