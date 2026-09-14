@@ -129,17 +129,17 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    MicClick(["User Taps Mic Button<br/>apps/web/src/components/arena/StoryInputBar.tsx"]) --> SupportCheck{{"SpeechRecognition Supported?<br/>apps/web/src/hooks/useVoiceSearch.ts"}}
+    MicClick(["User Taps Mic Button<br/>apps/web/src/components/arena/StoryPipeline.tsx"]) --> SupportCheck{{"SpeechRecognition Supported?<br/>apps/web/src/hooks/useVoiceSearch.ts"}}
 
     SupportCheck -- Yes --> StartEngine[["Initialize Web Speech API<br/>Continuous & Interim Active<br/>apps/web/src/hooks/useVoiceSearch.ts"]]
     SupportCheck -- No --> ToastFallback["Display Toast Alert<br/>Browser unsupported fallback<br/>sonner"]
 
-    StartEngine --> StreamAudio["Audio Waveform Stream<br/>Visual pulsating red indicator<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
+    StartEngine --> StreamAudio["Audio Waveform Stream<br/>Visual pulsating red indicator<br/>apps/web/src/components/arena/StoryPipeline.tsx"]
     StreamAudio --> InterimProcess["Stream Interim Transcript<br/>Instant input field preview<br/>apps/web/src/hooks/useVoiceSearch.ts"]
     StreamAudio --> SilenceWatchdog[["Silence Watchdog Active<br/>2000ms inactivity countdown<br/>apps/web/src/hooks/useVoiceSearch.ts"]]
 
     SilenceWatchdog --> SilenceTrigger{{"2s Silence Detected?<br/>apps/web/src/hooks/useVoiceSearch.ts"}}
-    SilenceTrigger -- Yes --> AutoStop["Auto-Stop Recognition<br/>Commit Final Title<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
+    SilenceTrigger -- Yes --> AutoStop["Auto-Stop Recognition<br/>Commit Final Title<br/>apps/web/src/components/arena/StoryPipeline.tsx"]
     SilenceTrigger -- No --> StreamAudio
 ```
 

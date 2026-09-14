@@ -56,15 +56,17 @@ BlindScrum keeps things minimal. You open the site, send a link, read or type th
 ### 4.4 Story Pipeline & Queue
 
 - In-flow arena pipeline shows the active ticket ("Now Sizing"), the "Up Next" preview card, and the remaining backlog horizon.
-- Anyone in the room can add tickets directly through an inline queue box without opening a modal.
-- Slide-over queue drawer allows full backlog reordering, deletion, and review of completed story estimates.
+- Active ticket field sits inside a tactile neumorphic inset well with an embedded microphone on the right flank for speech-to-text dictation.
+- Anyone in the room can add tickets directly through an inline queue input well with an embedded circular `+` button.
+- Slide-over queue drawer allows full backlog reordering, deletion, and review of completed story estimates, accessible via the header `Queue (N)` button or pipeline `View Backlog →` link.
 - Host can click "Next Story" to pop the first queued item into the arena, reset cards, and save the previous estimate to the completed log.
 
-### 4.5 Secret Voting & 3D Table
+### 4.5 Secret Voting & Avatar-on-Card 3D Table
 
 - Standard numeric Fibonacci cards: `1, 2, 3, 5, 8, 13, 20`.
 - During voting, the app only broadcasts `{ hasVoted: true }`. Card numbers remain on the voter's device until the host clicks reveal.
-- The table displays cards face-down with a pulse indicator while voting, and flips them around when revealed.
+- Each participant sits directly as a card. The card front hosts the participant avatar with dynamic status ring, alias, and live status pill ("Thinking..." or "Voted").
+- On reveal, cards 3D flip 180 degrees to show the numeric point score with the avatar anchored at the top identity badge and bottom consensus/majority summary pills. Winning consensus picks gain an elevated emerald highlight.
 
 ### 4.6 Analytics & Markdown Export
 

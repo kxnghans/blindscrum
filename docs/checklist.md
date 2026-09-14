@@ -15,7 +15,7 @@
 - **Presence & Host Handoff**: Connected members show up on the table in real-time. If the host leaves, the next oldest participant takes over host controls.
 - **Secret Voting**: Clients only broadcast `{ hasVoted: true }` during the vote. Card numbers stay on the device until the host clicks reveal.
 - **Voice Mic Hook**: Built a speech-to-text hook with the Web Speech API, interim text preview, and 2-second silence cutoff in [apps/web/src/hooks/useVoiceSearch.ts](../apps/web/src/hooks/useVoiceSearch.ts).
-- **Story Input Bar**: Built the active story bar with the mic button, waveform indicators, and quick-queue button in [apps/web/src/components/arena/StoryInputBar.tsx](../apps/web/src/components/arena/StoryInputBar.tsx).
+- **Story Input Bar & Pipeline**: Built the unified story pipeline with the embedded mic button, waveform indicators, and quick-queue button in [apps/web/src/components/arena/StoryPipeline.tsx](../apps/web/src/components/arena/StoryPipeline.tsx).
 - **Story Backlog Queue**: Added an asynchronous queue so teammates can add upcoming tickets anytime without interrupting the vote.
 - **Queue Drawer**: Built a slide-over drawer to view, reorder, delete, and promote queued stories in [apps/web/src/components/queue/StoryQueueDrawer.tsx](../apps/web/src/components/queue/StoryQueueDrawer.tsx).
 - **Sequential Sizing**: Added "Next Story" to pop the first queued item into the arena, clear cards, and record the previous estimate.
@@ -103,3 +103,18 @@
   - Verified full room state preservation (queue, active ticket, completed stories) upon host departure.
   - Conducted WebRTC IP privacy audit: confirmed zero backend persistence, mDNS local IP masking, and direct P2P transport.
   - Verified multi-tab end-to-end execution in Chrome automation via `run-p2p-failover-viztest.mjs`.
+- [x] **Task 17: Neumorphic Inset Tokens & Inputs Styling**
+  - Ingest dual-vector neumorphic inset shadows from `kxnghans.github.io` into `globals.css` (`bevel-light-inset`, `bevel-dark-inset`, `neumorphic-inset-well`).
+  - Apply sunken tactile wells to active story input, inline queue input, landing page room join input, and user profile input.
+- [x] **Task 18: Meaningful Mic Positioning & Queue Action De-Duplication**
+  - Integrate speech-to-text mic trigger directly into the active story input well with pulsating live visual cues.
+  - Streamline inline queue adder with an embedded circular `+` action button, eliminating competing labeled "Queue" buttons.
+  - Polish layout hierarchy so header remains the sole prominent `Queue (N)` drawer button and pipeline tray links cleanly via `View Backlog →`.
+- [x] **Task 19: Avatar-on-Card Architecture & 3D Reveal Flip Polish**
+  - Seat participant avatars and names directly on the card face during voting with dynamic "Thinking..." / "Voted" status pills.
+  - Animate avatars gracefully to an anchored top badge on 3D card flip (`rotate-y-180`) upon vote reveal.
+  - Display clear numeric estimate values in the card center with consensus highlight borders and outlier tags.
+- [x] **Task 20: Full Stability Suite, VizTest Audit & Git Sync**
+  - Run `pnpm check-types`, `pnpm lint`, `pnpm test`, and `pnpm build`.
+  - Conduct Chrome automation visual audit across responsive viewports.
+  - Commit and push to `origin/main` and `origin/qa`.

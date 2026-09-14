@@ -28,7 +28,7 @@ export function ThemeToggle() {
 
   // 3-way cyclic switching: system -> light -> dark -> system
   const cycleTheme = () => {
-    if (theme === "system") setTheme("light");
+    if (!theme || theme === "system") setTheme("light");
     else if (theme === "light") setTheme("dark");
     else setTheme("system");
   };

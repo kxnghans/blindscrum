@@ -34,7 +34,7 @@ BlindScrum is a planning poker tool for engineering teams. It stops people from 
 
 - `apps/web`: Next.js 16 web application.
   - `src/app`: App Router pages (`/` landing, `/room/[code]` arena) and `globals.css`.
-  - `src/components/arena`: Sizing arena components (StoryPipeline, StoryInputBar, FibonacciDeck, PokerTable, AnalyticsPanel).
+  - `src/components/arena`: Sizing arena components (StoryPipeline, FibonacciDeck, PokerTable, AnalyticsPanel).
   - `src/components/queue`: Story queue slide-over drawer.
   - `src/components/shared`: Header, theme toggle, and profile modal.
   - `src/hooks`: Real-time session state and speech recognition hooks.

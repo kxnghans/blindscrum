@@ -311,7 +311,7 @@ export function UserProfileModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Velocity Falcon"
-                className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="flex-1 px-3.5 py-2 rounded-xl neumorphic-inset-well border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
               <button
                 type="button"

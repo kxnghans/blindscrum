@@ -8,11 +8,12 @@ BlindScrum is a sprint estimation tool built on Next.js 16 (App Router), React 1
 
 ## What It Does
 
-- **In-Memory Rooms**: Rooms use clean alphanumeric codes (`SCRUM-492` or `BLND-92`). State stays in browser memory and WebRTC DataChannels.
+- **In-Memory Rooms**: Rooms use clean alphanumeric codes (`SCRUM-492` or `BLND-92`). State stays in browser memory and direct WebRTC DataChannels.
 - **Direct Links**: Share links directly or pass a room code via URL (`?room=CODE` or `/room/[code]`).
-- **Story Pipeline**: See what you are sizing right now, what is up next, and the remaining backlog horizon. Anyone on the team can queue upcoming tickets inline without opening a sidebar.
-- **Voice Story Input**: Uses the browser Web Speech API. Tap the mic, read the ticket title out loud, and it writes it into the title box and stops when you pause.
+- **Story Pipeline**: See what you are sizing right now, what is up next, and the remaining backlog horizon. Includes a tactile neumorphic well with an embedded mic and a quick `+` ticket adder.
+- **Voice Story Input**: Uses the browser Web Speech API. Tap the mic in the story well, speak the ticket title, and it transcribes live and stops when you pause.
 - **Story Backlog Queue**: Manage, reorder, and review completed tickets in a slide-over drawer without pausing the active vote.
+- **Avatar-on-Card Table**: Each player sits directly as an interactive card. During voting, the card front shows their avatar, name, and live status pill ("Thinking..." or "Voted"). On reveal, cards 3D flip to show points with the avatar anchored at the top and consensus summaries.
 - **Secret Blind Voting**: Clients only broadcast `{ hasVoted: true }`. Card numbers stay on the voter's device until the host clicks reveal.
 - **Numeric Fibonacci Deck**: Pure numeric cards (`1, 2, 3, 5, 8, 13, 20`) with 3D tactile states and physical flip mechanics.
 - **Interactive Table Reactions**: Click another teammate's seat to throw playful real-time reactions (egg splatter, tomato burst, sleeping gas with Zzz, confetti cheers, or lightning zap) backed by procedural Web Audio sound synthesis.
@@ -20,7 +21,7 @@ BlindScrum is a sprint estimation tool built on Next.js 16 (App Router), React 1
   - Horizontal bar chart of vote frequencies
   - Summary cards for average, consensus pick, and spread
   - One-click copy for Jira, Linear, and Slack markdown tables
-- **Stealth Theme**: Dark mode default (`#090D16` slate) with high-contrast light mode, fully accessible with real keyboard focus rings.
+- **Stealth Theme**: System auto-detection default with 3-way toggle (System / Light / Dark), tactile neumorphic inset wells, and accessible focus rings.
 - **Avatars & Presets**: Generates agile names (_Velocity Falcon_, _Agile Otter_) with deterministic inline SVG faces, plus a 10-character preset gallery and one-click randomizer.
 
 ---
@@ -66,7 +67,7 @@ blindscrum/
 │       ├── public/                        # Static assets
 │       ├── src/
 │       │   ├── app/
-│       │   │   ├── globals.css            # Tailwind v4 theme, tokens, & 3D card styles
+│       │   │   ├── globals.css            # Tailwind v4 theme, tokens, inset wells, & 3D card styles
 │       │   │   ├── layout.tsx             # Root layout with ThemeProvider & Sonner Toaster
 │       │   │   ├── page.tsx               # Landing page (Create Room, Join Code, Auto-routing)
 │       │   │   └── room/
@@ -76,14 +77,13 @@ blindscrum/
 │       │   │   ├── arena/
 │       │   │   │   ├── AnalyticsPanel.tsx # Distribution bar chart, summary cards, export
 │       │   │   │   ├── FibonacciDeck.tsx  # Interactive Fibonacci cards (1, 2, 3, 5, 8, 13, 20)
-│       │   │   │   ├── PokerTable.tsx     # Live table, 3D flip card animations, reactions
-│       │   │   │   ├── StoryInputBar.tsx  # Story title input and Web Speech mic
-│       │   │   │   └── StoryPipeline.tsx  # Unified Now Sizing, Up Next, & inline queue
+│       │   │   │   ├── PokerTable.tsx     # Live table, avatar-on-card 3D flip, reactions
+│       │   │   │   └── StoryPipeline.tsx  # Unified Now Sizing, Up Next, embedded mic & inline queue
 │       │   │   ├── queue/
 │       │   │   │   └── StoryQueueDrawer.tsx # Slide-over queue drawer & session history
 │       │   │   └── shared/
 │       │   │       ├── RoomHeader.tsx     # Brand bar, room code pill, copy link, queue badge
-│       │   │       ├── ThemeToggle.tsx    # Light/dark mode toggle
+│       │   │       ├── ThemeToggle.tsx    # 3-way system/light/dark toggle
 │       │   │       └── UserProfileModal.tsx # Name, avatar presets, and randomizer dialog
 │       │   ├── hooks/
 │       │   │   ├── useScrumSession.ts     # Master ephemeral state machine & WebRTC P2P sync

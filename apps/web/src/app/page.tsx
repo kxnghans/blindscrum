@@ -113,7 +113,10 @@ function LandingContent() {
             <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
               <Zap className="w-5 h-5 text-indigo-200" />
             </div>
-            <h2 className="text-xl font-black mb-6">Start a Room</h2>
+            <h2 className="text-xl font-black mb-1.5">Start a Room</h2>
+            <p className="text-xs text-indigo-100/85 mb-6 leading-relaxed">
+              Get a link for your team. You manage the active story and flip the cards.
+            </p>
           </div>
 
           <button
@@ -143,7 +146,7 @@ function LandingContent() {
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value.toUpperCase())}
               placeholder="e.g. SCRUM-492"
-              className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono font-bold text-center tracking-wider text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 rounded-2xl neumorphic-inset-well border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-slate-100 font-mono font-bold text-center tracking-wider text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
             />
             <button
               type="submit"

@@ -54,24 +54,36 @@ Cards simulate physical playing cards using CSS 3D transforms:
 - `.backface-hidden`: Hides the opposite side during card flips.
 - `.rotate-y-180`: Rotates the card 180 degrees along the Y-axis on reveal.
 
-### Card States
+### Avatar-on-Card Architecture
 
-- **Resting:** Soft border, neutral background.
-- **Hover:** Lifts slightly (`-translate-y-2`) with an indigo glow.
-- **Selected:** Lifts higher (`-translate-y-3`) with an indigo ring and corner indicator.
-- **Revealed:** Flips smoothly in 500ms to show the point value.
+Each player sits at the table as an interactive playing card:
 
----
-
-## 4. Theme Switching
-
-- Managed with `next-themes` and stored in `localStorage`.
-- Handled with `useSyncExternalStore` in `ThemeToggle.tsx` to prevent hydration mismatches on initial render.
-- Light mode softens shadows; dark mode deepens contrasts for dimly lit conference rooms.
+- **Voting Face (Front):** Displays role indicator (host crown), participant avatar with dynamic ring (amber pulse for thinking, emerald ring with check for voted), bold alias, and live status pill.
+- **Revealed Face (Back):** 3D flips 180 degrees to show the numeric point score with the avatar anchored at the top identity pill and a bottom summary badge (★ Consensus, ★ Majority, Lowest, or Highest).
+- **Consensus Glow:** Winning consensus picks gain an emerald border with elevated glow (`border-emerald-500 shadow-emerald-500/20`).
 
 ---
 
-## 5. Accessibility
+## 4. Neumorphic Inset Wells
+
+Adapted from the dual-vector tactile lighting model in `kxnghans.github.io`:
+
+- **Light Mode (`.bevel-light-inset`):** Inset shadows `inset 2px 2px 4px rgba(0, 0, 0, 0.08)` and `inset -2px -2px 4px rgba(255, 255, 255, 0.75)` on slate background (`#f1f5f9`).
+- **Dark Mode (`.dark:bevel-dark-inset`):** Inset shadows `inset 2.5px 2.5px 5px rgba(0, 0, 0, 0.85)` and `inset -1.5px -1.5px 3px rgba(255, 255, 255, 0.05)` on deep obsidian (`#0c1017`).
+- **Usage:** Applied to active story input well, inline quick queue well, landing page room join input, and user profile dialog input.
+
+---
+
+## 5. 3-Way Theme Switching
+
+- **Default Mode:** `system` (automatically synchronizes with OS preference).
+- **Cycle Flow:** Clicking toggles `system` -> `light` -> `dark` -> `system`.
+- **Icons:** Monitor (System), Sun (Light), Moon (Dark).
+- **Hydration Safety:** Uses `useSyncExternalStore` in `ThemeToggle.tsx` to prevent hydration mismatches on initial server render.
+
+---
+
+## 6. Accessibility
 
 1. **Contrast:** Meets WCAG 2.1 AA with at least 4.5:1 text-to-background contrast.
 2. **Keyboard:** All cards are real `<button>` elements with `aria-pressed` states. You can tab through them and hit `Enter` or `Space` to vote.
@@ -80,7 +92,7 @@ Cards simulate physical playing cards using CSS 3D transforms:
 
 ---
 
-## 6. Micro-Interactions & Reactions Motion
+## 7. Micro-Interactions & Reactions Motion
 
 Reactions use lightweight CSS keyframe animations designed for playful physical feedback:
 

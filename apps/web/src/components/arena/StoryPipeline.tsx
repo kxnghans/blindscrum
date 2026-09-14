@@ -13,7 +13,6 @@ import {
   Plus,
   Play,
   Layers,
-  ChevronRight,
   Check,
   ArrowRight,
 } from "lucide-react";
@@ -101,105 +100,111 @@ export function StoryPipeline({
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 my-4 space-y-3">
-      {/* Top Banner: Active Story + Voice Mic */}
+      {/* Top Banner: Active Story + Voice Mic & Inline Queue */}
       <div className="relative rounded-3xl p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-indigo-500/5 transition-all">
-        {/* Listening Voice Indicator */}
-        {showVisualCues && (
-          <div className="absolute -top-3 left-6 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold tracking-wider uppercase flex items-center gap-1.5 shadow-md animate-pulse">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
-            Listening...
-          </div>
-        )}
+        {/* Header Row: Stage Indicator & Voice Status */}
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              Now Sizing
+            </span>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          {/* Active Story Stage Info */}
-          <div className="flex items-center gap-3 flex-1 min-w-0 w-full">
-            {/* Mic Button */}
+            {/* Listening Voice Indicator */}
+            {showVisualCues && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                Listening...
+              </span>
+            )}
+          </div>
+
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
+            {isHost ? "Host can edit or speak ticket title" : "Host controls story title"}
+          </span>
+        </div>
+
+        {/* Inputs Row: Active Story Well + Inline Quick Queue Well */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Active Story Input Well with Embedded Mic */}
+          <div className="neumorphic-inset-well rounded-2xl border border-slate-200/80 dark:border-slate-800/80 px-3.5 py-2 flex items-center gap-2.5 flex-1 min-w-0 transition-all focus-within:ring-2 focus-within:ring-indigo-500/40">
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={currentInputValue}
+              disabled={!isHost && !isEditingCurrent}
+              onFocus={() => setIsEditingCurrent(true)}
+              onChange={(e) => setCurrentInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && isHost) {
+                  handleCommitCurrentTitle();
+                }
+              }}
+              className={`flex-1 min-w-0 text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 bg-transparent border-0 p-0 focus:ring-0 focus:outline-none truncate ${
+                !isHost && !isEditingCurrent
+                  ? "cursor-default select-all"
+                  : "cursor-text"
+              }`}
+              placeholder="Enter story title or speak with mic..."
+            />
+
+            {/* Host Save/Set Action */}
+            {isHost &&
+              isEditingCurrent &&
+              currentInputValue !== currentTitle && (
+                <button
+                  type="button"
+                  onClick={handleCommitCurrentTitle}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shrink-0 transition-transform active:scale-95"
+                  title="Save active story"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Set</span>
+                </button>
+              )}
+
+            {/* Meaningfully Embedded Mic Button */}
             <button
               ref={micRef}
               type="button"
               onClick={toggleMic}
-              className={`relative flex items-center justify-center w-11 h-11 rounded-2xl transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              className={`relative flex items-center justify-center w-8 h-8 rounded-xl transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 isMicActive
-                  ? "bg-red-500 text-white shadow-lg shadow-red-500/30 ring-4 ring-red-500/20 animate-pulse"
-                  : "bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  ? "bg-red-500 text-white shadow-md shadow-red-500/30 ring-2 ring-red-400/40 animate-pulse"
+                  : "bg-slate-200/70 dark:bg-slate-800/80 hover:bg-indigo-100 dark:hover:bg-indigo-950/60 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               }`}
               title={isMicActive ? "Stop voice listening" : "Speak story title"}
               aria-label="Toggle microphone input"
             >
               {isMicActive ? (
-                <MicOff className="w-5 h-5 animate-bounce" />
+                <MicOff className="w-4 h-4 animate-bounce" />
               ) : (
-                <Mic className="w-5 h-5" />
+                <Mic className="w-4 h-4" />
               )}
             </button>
-
-            {/* Title & Badge */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                  Now Sizing
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={currentInputValue}
-                  disabled={!isHost && !isEditingCurrent}
-                  onFocus={() => setIsEditingCurrent(true)}
-                  onChange={(e) => setCurrentInputValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && isHost) {
-                      handleCommitCurrentTitle();
-                    }
-                  }}
-                  className={`w-full text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 bg-transparent border-0 p-0 focus:ring-0 focus:outline-none truncate ${
-                    !isHost && !isEditingCurrent
-                      ? "cursor-default"
-                      : "cursor-text"
-                  }`}
-                  placeholder="Enter story title..."
-                />
-                {isHost &&
-                  isEditingCurrent &&
-                  currentInputValue !== currentTitle && (
-                    <button
-                      type="button"
-                      onClick={handleCommitCurrentTitle}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shrink-0"
-                      title="Save active story"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Set</span>
-                    </button>
-                  )}
-              </div>
-            </div>
           </div>
 
-          {/* Quick inline queue adder */}
+          {/* Quick Inline Queue Well with Embedded Circular + Button */}
           <form
             onSubmit={handleQuickAdd}
-            className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800"
+            className="neumorphic-inset-well rounded-2xl border border-slate-200/80 dark:border-slate-800/80 pl-3.5 pr-1.5 py-1.5 flex items-center gap-2 w-full sm:w-64 shrink-0 transition-all focus-within:ring-2 focus-within:ring-indigo-500/40"
           >
             <input
               type="text"
               name="quickQueue"
               value={quickQueueText}
               onChange={(e) => setQuickQueueText(e.target.value)}
-              placeholder="Queue next ticket..."
-              className="w-full sm:w-56 px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Queue ticket for later..."
+              className="flex-1 min-w-0 bg-transparent text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
             />
             <button
               type="submit"
-              className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 text-slate-700 dark:text-slate-200 hover:text-white dark:hover:text-white text-xs font-bold border border-slate-200 dark:border-slate-700 shadow-sm transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-              title="Add story to queue (Enter to submit)"
+              disabled={!quickQueueText.trim()}
+              className="w-7 h-7 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white shadow-sm transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              title="Add ticket to backlog queue"
+              aria-label="Add ticket to queue"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Queue</span>
             </button>
           </form>
         </div>
@@ -237,7 +242,7 @@ export function StoryPipeline({
             </div>
           ) : (
             <span className="text-slate-400 dark:text-slate-500 italic">
-              No tickets queued. Anyone can type or speak a title above.
+              No tickets queued. Anyone can queue a ticket above.
             </span>
           )}
         </div>
@@ -263,15 +268,14 @@ export function StoryPipeline({
             </div>
           )}
 
-          {/* Full Queue Drawer Button */}
+          {/* Full Backlog Drawer Link */}
           <button
             type="button"
             onClick={onOpenFullQueue}
             className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Manage Queue ({queue.length})</span>
-            <ChevronRight className="w-3 h-3" />
+            <span>View Backlog →</span>
           </button>
         </div>
       </div>

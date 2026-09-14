@@ -84,6 +84,35 @@ body {
   border: 1px solid var(--border-app);
 }
 
+/* Neumorphic Dual-Vector Inset Wells */
+.bevel-light-inset {
+  box-shadow:
+    inset 2px 2px 4px rgba(0, 0, 0, 0.08),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.75);
+}
+
+.dark .bevel-dark-inset,
+:where(.dark, .dark *) .dark\:bevel-dark-inset {
+  box-shadow:
+    inset 2.5px 2.5px 5px rgba(0, 0, 0, 0.75),
+    inset -1.5px -1.5px 3px rgba(255, 255, 255, 0.06);
+}
+
+.neumorphic-inset-well {
+  background-color: #f1f5f9;
+  box-shadow:
+    inset 2px 2px 4px rgba(0, 0, 0, 0.08),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.75);
+}
+
+.dark .neumorphic-inset-well,
+:where(.dark, .dark *) .dark\:neumorphic-inset-well {
+  background-color: #0c1017;
+  box-shadow:
+    inset 2.5px 2.5px 5px rgba(0, 0, 0, 0.85),
+    inset -1.5px -1.5px 3px rgba(255, 255, 255, 0.05);
+}
+
 /* Custom scrollbar for queue drawer */
 ::-webkit-scrollbar {
   width: 6px;

@@ -26,7 +26,7 @@ BlindScrum is a Turborepo monorepo with a single web package:
 - **Dynamic Param:** Resolves `params.code` with React 19 `use()`.
 - **Identity Onboarding:** If the user has not configured their name, opens the onboarding modal on mount so they can type their name or click "Randomize" for an instant agile persona.
 - **Session Init:** Connects to the room channel via `useScrumSession`.
-- **Arena Layout:** Houses the unified Story Pipeline (Now Sizing, Up Next, Backlog Horizon, and inline queuing), Poker Table with live voter indicators, 3D Fibonacci Deck, and post-reveal Analytics Panel.
+- **Arena Layout:** Houses the unified Story Pipeline (Now Sizing well with embedded mic, Up Next, Backlog Horizon, and inline `+` ticket well), Avatar-on-Card Poker Table with live voter indicators and 3D reveal flip, 3D Fibonacci Deck, and post-reveal Analytics Panel.
 
 ---
 
