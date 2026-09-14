@@ -57,8 +57,8 @@ The estimation cycle hides individual vote values during the voting phase to pre
 flowchart LR
     subgraph Phase1["Phase 1: Setup & Input"]
         IdleState(["IDLE / READY State<br/>Room active, cards open<br/>apps/web/src/types/scrum.ts"])
-        HostInput["Host Sets Story Title<br/>Via typing or microphone<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
-        AsyncQueue["Teammates Queue Stories<br/>Async Drawer Additions<br/>apps/web/src/components/queue/StoryQueueDrawer.tsx"]
+        HostInput["Host Sets Story Title<br/>Via typing or microphone<br/>apps/web/src/components/arena/StoryPipeline.tsx"]
+        AsyncQueue["Teammates Queue Stories<br/>Pipeline & Drawer Additions<br/>apps/web/src/components/arena/StoryPipeline.tsx"]
     end
 
     subgraph Phase2["Phase 2: Blind Estimation"]
@@ -104,20 +104,20 @@ sequenceDiagram
     actor Host as Host Client (Scrum Master)
     actor Voter as Voter Client (Teammate)
     participant Channel as Ephemeral Channel (blindscrum:CODE)
-    
+
     Note over Host, Voter: Round Begins in VOTING State
     Host->>Channel: broadcast UPDATE_TITLE ("OAuth2 Migration")
     Channel->>Voter: deliver UPDATE_TITLE ("OAuth2 Migration")
-    
+
     Note over Voter: Voter Selects Fibonacci Card (e.g. 5 pts)
     Voter->>Voter: Store '5' in local memory (mySecretVoteRef)
     Voter->>Channel: broadcast CAST_BLIND_VOTE { participantId, hasVoted: true }
     Channel->>Host: deliver CAST_BLIND_VOTE (shows card face-down with glow)
-    
+
     Note over Host: All Participants Have Voted
     Host->>Channel: broadcast REVEAL_VOTES { votes: { host: 5, voter: 5 } }
     Channel->>Voter: deliver REVEAL_VOTES
-    
+
     Note over Host, Voter: Synchronized 3D Card Flip & Analytics Calculation
     Voter->>Voter: Render Bar Chart, Average (5.0), and Confetti
     Host->>Host: Render Bar Chart, Average (5.0), and Confetti
@@ -130,14 +130,14 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     MicClick(["User Taps Mic Button<br/>apps/web/src/components/arena/StoryInputBar.tsx"]) --> SupportCheck{{"SpeechRecognition Supported?<br/>apps/web/src/hooks/useVoiceSearch.ts"}}
-    
+
     SupportCheck -- Yes --> StartEngine[["Initialize Web Speech API<br/>Continuous & Interim Active<br/>apps/web/src/hooks/useVoiceSearch.ts"]]
     SupportCheck -- No --> ToastFallback["Display Toast Alert<br/>Browser unsupported fallback<br/>sonner"]
-    
+
     StartEngine --> StreamAudio["Audio Waveform Stream<br/>Visual pulsating red indicator<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
     StreamAudio --> InterimProcess["Stream Interim Transcript<br/>Instant input field preview<br/>apps/web/src/hooks/useVoiceSearch.ts"]
     StreamAudio --> SilenceWatchdog[["Silence Watchdog Active<br/>2000ms inactivity countdown<br/>apps/web/src/hooks/useVoiceSearch.ts"]]
-    
+
     SilenceWatchdog --> SilenceTrigger{{"2s Silence Detected?<br/>apps/web/src/hooks/useVoiceSearch.ts"}}
     SilenceTrigger -- Yes --> AutoStop["Auto-Stop Recognition<br/>Commit Final Title<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
     SilenceTrigger -- No --> StreamAudio
@@ -163,5 +163,29 @@ flowchart LR
         HostNext(["Host Clicks 'Next Story'<br/>apps/web/src/components/arena/PokerTable.tsx"]) --> ArchivePrev["Archive Active Story<br/>Append to Completed Log<br/>apps/web/src/types/scrum.ts"]
         ArchivePrev --> PopQueue["Pop First Queued Item<br/>Set as Active Story Title<br/>apps/web/src/hooks/useScrumSession.ts"]
         PopQueue --> ResetRound["Reset Round to VOTING<br/>Clear Cards & Analytics<br/>apps/web/src/hooks/useScrumSession.ts"]
+    end
+```
+
+---
+
+## 6. Real-Time Table Reactions & Micro-Interactions Pipeline
+
+```mermaid
+flowchart LR
+    subgraph Trigger["User Action"]
+        GuestClick(["Click Teammate Seat<br/>Card or Avatar Interaction<br/>apps/web/src/components/arena/PokerTable.tsx"]) --> PopoverMenu["Display Reaction Picker<br/>Egg, Tomato, Gas, Cheers, Zap<br/>apps/web/src/components/arena/PokerTable.tsx"]
+        PopoverMenu --> SelectThrowable["Select Reaction Type<br/>apps/web/src/types/scrum.ts"]
+    end
+
+    subgraph Dispatch["Realtime Dispatch & Sound"]
+        SelectThrowable --> LocalSynth["Synthesize Procedural Audio<br/>Zero-Asset Web Audio API<br/>apps/web/src/utils/soundEffects.ts"]
+        SelectThrowable --> BroadcastEvent["Broadcast THROW_REACTION<br/>Sender ID, Target ID, Type<br/>apps/web/src/hooks/useScrumSession.ts"]
+    end
+
+    subgraph Render["Synchronized Peer Rendering"]
+        BroadcastEvent --> PeerHook[["Peer Session Handler<br/>Ephemeral Queue Append<br/>apps/web/src/hooks/useScrumSession.ts"]]
+        PeerHook --> PeerSynth["Synthesize Peer Audio<br/>playReactionSound<br/>apps/web/src/utils/soundEffects.ts"]
+        PeerHook --> AnimationLayer["Render Visual FX Layer<br/>Arc Fly-In, Splatter, Shake<br/>apps/web/src/components/arena/PokerTable.tsx"]
+        AnimationLayer --> AutoPrune["Automatic Ephemeral Pruning<br/>3000ms State Eviction<br/>apps/web/src/hooks/useScrumSession.ts"]
     end
 ```

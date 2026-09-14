@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
-    "pages:build": "opennextjs-cloudflare build",
-    "pages:deploy": "wrangler deploy",
+    "deploy": "vercel --prod",
     "start": "next start",
     "lint": "eslint .",
     "check-types": "tsc --noEmit",

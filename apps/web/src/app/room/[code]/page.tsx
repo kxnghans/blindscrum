@@ -3,12 +3,14 @@
 /**
  * @file page.tsx
  * @description Dynamic room arena page orchestrating the live estimation session,
- * voice-enabled story input, 3D Fibonacci deck, poker table, queue drawer, and analytics.
+ * first-run identity onboarding, real-time Story Pipeline, virtual poker table,
+ * 3D Fibonacci deck, queue drawer, and analytics.
  */
 
 import { useState, use } from "react";
 import { RoomHeader } from "@/components/shared/RoomHeader";
-import { StoryInputBar } from "@/components/arena/StoryInputBar";
+import { UserProfileModal } from "@/components/shared/UserProfileModal";
+import { StoryPipeline } from "@/components/arena/StoryPipeline";
 import { PokerTable } from "@/components/arena/PokerTable";
 import { FibonacciDeck } from "@/components/arena/FibonacciDeck";
 import { AnalyticsPanel } from "@/components/arena/AnalyticsPanel";
@@ -25,6 +27,10 @@ export default function RoomPage({ params }: RoomPageProps) {
   const roomCode = normalizeRoomCode(resolvedParams.code);
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !sessionStorage.getItem(`blindscrum_configured_${roomCode}`);
+  });
 
   const {
     currentUser,
@@ -37,8 +43,24 @@ export default function RoomPage({ params }: RoomPageProps) {
     queue,
     completedStories,
     analytics,
+    activeReactions,
     actions,
   } = useScrumSession({ roomCode });
+
+  const handleCompleteOnboarding = (name: string, avatar: string) => {
+    actions.updateUserProfile(name, avatar);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`blindscrum_configured_${roomCode}`, "true");
+    }
+    setIsOnboardingOpen(false);
+  };
+
+  const handleDismissOnboarding = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`blindscrum_configured_${roomCode}`, "true");
+    }
+    setIsOnboardingOpen(false);
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[var(--bg-app)] text-[var(--text-main)] transition-colors">
@@ -53,16 +75,22 @@ export default function RoomPage({ params }: RoomPageProps) {
       />
 
       {/* Main Estimation Arena */}
-      <main className="flex-1 flex flex-col justify-between max-w-7xl mx-auto w-full py-4 sm:py-6">
-        {/* Story Title & Voice Input Bar */}
-        <StoryInputBar
+      <main className="flex-1 flex flex-col justify-between max-w-7xl mx-auto w-full py-2 sm:py-4">
+        {/* Story Pipeline: Active Sizing, Up Next, Backlog Horizon, & Inline Queue */}
+        <StoryPipeline
           currentTitle={storyTitle}
           isHost={isHost}
+          queue={queue}
           onUpdateTitle={actions.updateStoryTitle}
           onAddToQueue={actions.addToQueue}
+          onPromoteStory={(item) => {
+            actions.updateStoryTitle(item.title);
+            actions.removeFromQueue(item.id);
+          }}
+          onOpenFullQueue={() => setIsQueueOpen(true)}
         />
 
-        {/* Live Virtual Poker Table */}
+        {/* Live Virtual Poker Table with Real-time Voter Indicators & Reactions */}
         <PokerTable
           participants={participants}
           currentUserId={currentUser.id}
@@ -72,6 +100,8 @@ export default function RoomPage({ params }: RoomPageProps) {
           onResetRound={() => actions.resetRound()}
           onNextStory={actions.nextStory}
           hasQueuedStories={queue.length > 0}
+          activeReactions={activeReactions}
+          onSendReaction={actions.sendReaction}
         />
 
         {/* Interactive Fibonacci Card Deck */}
@@ -91,7 +121,16 @@ export default function RoomPage({ params }: RoomPageProps) {
         )}
       </main>
 
-      {/* Asynchronous Story Queue Drawer */}
+      {/* First-Run Profile Onboarding Modal */}
+      <UserProfileModal
+        isOpen={isOnboardingOpen}
+        onClose={handleDismissOnboarding}
+        currentUser={currentUser}
+        onSave={handleCompleteOnboarding}
+        isInitialOnboarding={true}
+      />
+
+      {/* Asynchronous Story Queue Drawer for Full Reordering & History */}
       <StoryQueueDrawer
         isOpen={isQueueOpen}
         onClose={() => setIsQueueOpen(false)}

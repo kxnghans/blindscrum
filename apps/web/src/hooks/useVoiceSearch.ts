@@ -39,12 +39,16 @@ export const useVoiceSearch = ({
     return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
   });
   const [showVisualCues, setShowVisualCues] = useState(false);
-  const [placeholderText, setPlaceholderText] = useState("Enter story title to size...");
+  const [placeholderText, setPlaceholderText] = useState(
+    "Enter story title to size...",
+  );
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSpeechTimeRef = useRef<number | null>(null);
-  const visualCuesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const visualCuesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Initialize SpeechRecognition instance on mount if browser supports it
   useEffect(() => {
@@ -162,7 +166,8 @@ export const useVoiceSearch = ({
   const toggleMic = useCallback(() => {
     if (!isSpeechSupported) {
       toast.error("Voice input is not supported in this browser.", {
-        description: "Please use Google Chrome, Edge, or a Web Speech-enabled browser.",
+        description:
+          "Please use Google Chrome, Edge, or a Web Speech-enabled browser.",
       });
       return;
     }

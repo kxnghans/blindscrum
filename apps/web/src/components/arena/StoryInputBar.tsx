@@ -95,7 +95,9 @@ export function StoryInputBar({
                 ? "bg-red-500 text-white shadow-lg shadow-red-500/30 ring-4 ring-red-500/20 animate-pulse"
                 : "bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400"
             }`}
-            title={isMicActive ? "Stop listening" : "Click to speak story title"}
+            title={
+              isMicActive ? "Stop listening" : "Click to speak story title"
+            }
             aria-label="Toggle microphone input"
           >
             {isMicActive ? (

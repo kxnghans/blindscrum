@@ -4,9 +4,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "pages:build": "turbo run pages:build",
-    "deploy": "wrangler deploy -c apps/web/wrangler.toml",
-    "pages:deploy": "pnpm run deploy",
+    "deploy": "vercel --prod",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",

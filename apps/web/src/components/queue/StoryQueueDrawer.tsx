@@ -132,7 +132,10 @@ export function StoryQueueDrawer({
 
         {/* Input */}
         {activeTab === "queue" && (
-          <form onSubmit={handleAdd} className="p-4 border-b border-slate-100 dark:border-slate-800/60">
+          <form
+            onSubmit={handleAdd}
+            className="p-4 border-b border-slate-100 dark:border-slate-800/60"
+          >
             <label
               htmlFor="queue-title-input"
               className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5"
@@ -169,7 +172,8 @@ export function StoryQueueDrawer({
                   No queued stories yet
                 </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  Add upcoming tickets here. They will be ready when you click Next Story.
+                  Add upcoming tickets here. They will be ready when you click
+                  Next Story.
                 </p>
               </div>
             ) : (
@@ -225,43 +229,45 @@ export function StoryQueueDrawer({
                     </button>
                   </div>
                 </div>
-              )))
-            ) : completedStories.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <CheckCircle2 className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  No completed stories yet
-                </p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  Finished estimates will show up here as you advance through stories.
-                </p>
-              </div>
-            ) : (
-              completedStories.map((story) => (
-                <div
-                  key={story.id}
-                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {story.title}
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {new Date(story.completedAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-
-                  <div className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-black text-xs">
-                    {story.estimate} pts
-                  </div>
-                </div>
               ))
-            )}
-          </div>
+            )
+          ) : completedStories.length === 0 ? (
+            <div className="text-center py-12 px-4">
+              <CheckCircle2 className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                No completed stories yet
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                Finished estimates will show up here as you advance through
+                stories.
+              </p>
+            </div>
+          ) : (
+            completedStories.map((story) => (
+              <div
+                key={story.id}
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                    {story.title}
+                  </p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                    {new Date(story.completedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+
+                <div className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-black text-xs">
+                  {story.estimate} pts
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}

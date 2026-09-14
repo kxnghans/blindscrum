@@ -22,7 +22,7 @@ export function FibonacciDeck({
   roundStatus,
   onSelectVote,
 }: FibonacciDeckProps) {
-  const cards: FibonacciValue[] = [...FIBONACCI_CARDS, "?", "☕"];
+  const cards = FIBONACCI_CARDS;
   const isRevealed = roundStatus === "REVEALED";
 
   return (
@@ -41,11 +41,10 @@ export function FibonacciDeck({
       <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4">
         {cards.map((val) => {
           const isSelected = selectedVote === val;
-          const isNumeric = typeof val === "number";
 
           return (
             <button
-              key={String(val)}
+              key={val}
               type="button"
               disabled={isRevealed}
               onClick={() => onSelectVote(val)}
@@ -75,9 +74,7 @@ export function FibonacciDeck({
                 className={`text-xl sm:text-3xl font-extrabold tracking-tight my-auto ${
                   isSelected
                     ? "text-white scale-110"
-                    : isNumeric
-                      ? "text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
-                      : "text-amber-500 dark:text-amber-400 text-2xl"
+                    : "text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
                 } transition-all`}
               >
                 {val}

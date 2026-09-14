@@ -3,13 +3,23 @@
  * @description Utilities for generating, sanitizing, and validating ephemeral room codes.
  */
 
-const ADJECTIVE_PREFIXES = ["BLND", "SCRUM", "FAST", "APEX", "SPRINT", "AGILE", "POKER", "TEAM"] as const;
+const ADJECTIVE_PREFIXES = [
+  "BLND",
+  "SCRUM",
+  "FAST",
+  "APEX",
+  "SPRINT",
+  "AGILE",
+  "POKER",
+  "TEAM",
+] as const;
 
 /**
  * Generates an accessible, memorable room code like "SCRUM-492" or "BLND-78".
  */
 export function generateRoomCode(): string {
-  const prefix = ADJECTIVE_PREFIXES[Math.floor(Math.random() * ADJECTIVE_PREFIXES.length)];
+  const prefix =
+    ADJECTIVE_PREFIXES[Math.floor(Math.random() * ADJECTIVE_PREFIXES.length)];
   const num = Math.floor(100 + Math.random() * 900); // 3-digit number 100-999
   return `${prefix}-${num}`;
 }

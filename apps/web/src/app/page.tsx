@@ -15,12 +15,15 @@ import {
   Zap,
   Layers,
   Edit2,
-  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { UserProfileModal } from "@/components/shared/UserProfileModal";
-import { generateRoomCode, normalizeRoomCode, isValidRoomCode } from "@/utils/roomCode";
+import {
+  generateRoomCode,
+  normalizeRoomCode,
+  isValidRoomCode,
+} from "@/utils/roomCode";
 import { generateRandomScrumAlias, generateScrumAvatar } from "@/utils/persona";
 import type { Participant } from "@/types/scrum";
 
@@ -30,6 +33,7 @@ function LandingContent() {
 
   const [inputCode, setInputCode] = useState("");
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isCustomized, setIsCustomized] = useState(false);
 
   // Default user setup
   const [user, setUser] = useState<Participant>(() => {
@@ -72,6 +76,9 @@ function LandingContent() {
     const code = generateRoomCode();
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`blindscrum_user_${code}`, JSON.stringify(user));
+      if (isCustomized) {
+        sessionStorage.setItem(`blindscrum_configured_${code}`, "true");
+      }
     }
     router.push(`/room/${code}`);
   };
@@ -85,6 +92,9 @@ function LandingContent() {
     }
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`blindscrum_user_${clean}`, JSON.stringify(user));
+      if (isCustomized) {
+        sessionStorage.setItem(`blindscrum_configured_${clean}`, "true");
+      }
     }
     router.push(`/room/${clean}`);
   };
@@ -104,11 +114,6 @@ function LandingContent() {
 
       {/* Hero */}
       <div className="text-center max-w-2xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold mb-6">
-          <Lock className="w-3.5 h-3.5" />
-          <span>In-memory sessions. Hidden votes until reveal.</span>
-        </div>
-
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-tight mb-4">
           Point stories fast. <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-indigo-400 to-purple-500">
@@ -117,7 +122,9 @@ function LandingContent() {
         </h1>
 
         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
-          Share a link with your team. Speak or type the story title, vote in secret, and reveal the breakdown together. No accounts, no database, no setup.
+          Share a link with your team. Speak or type the story title, vote in
+          secret, and reveal the breakdown together. No accounts, no database,
+          no setup.
         </p>
       </div>
 
@@ -164,7 +171,8 @@ function LandingContent() {
             </div>
             <h2 className="text-xl font-black mb-1">Start a Room</h2>
             <p className="text-xs text-indigo-100/80 mb-6">
-              Create a fresh room and get a link. You control the active story and when to flip the cards.
+              Create a fresh room and get a link. You control the active story
+              and when to flip the cards.
             </p>
           </div>
 
@@ -188,7 +196,8 @@ function LandingContent() {
               Join a Room
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-              Have a code from your lead? Paste it here to drop straight into the session.
+              Have a code from your lead? Paste it here to drop straight into
+              the session.
             </p>
           </div>
 
@@ -222,7 +231,8 @@ function LandingContent() {
               No databases
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              State lives in browser memory. When the tab closes, the room is gone.
+              State lives in browser memory. When the tab closes, the room is
+              gone.
             </p>
           </div>
         </div>
@@ -236,7 +246,8 @@ function LandingContent() {
               Voice mic input
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Read ticket titles out loud. It transcribes live and stops when you pause.
+              Read ticket titles out loud. It transcribes live and stops when
+              you pause.
             </p>
           </div>
         </div>
@@ -250,7 +261,8 @@ function LandingContent() {
               Story queue
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Stack upcoming tickets in the drawer while the team is still voting.
+              Stack upcoming tickets in the drawer while the team is still
+              voting.
             </p>
           </div>
         </div>
@@ -263,6 +275,7 @@ function LandingContent() {
         currentUser={user}
         onSave={(newName, newAvatar) => {
           setUser((prev) => ({ ...prev, name: newName, avatar: newAvatar }));
+          setIsCustomized(true);
         }}
       />
     </main>

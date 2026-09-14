@@ -34,14 +34,14 @@ Light Mode:
 
 Fonts use the system font stack to avoid loading external font files:
 
-| Level | Size | Weight | Line Height | Usage |
-| :--- | :--- | :--- | :--- | :--- |
-| **Hero Title** | `2.5rem` (40px) | `900` | `1.1` | Landing page main heading. |
-| **Section Header** | `1.25rem` (20px) | `800` | `1.25` | Table title, analytics header. |
-| **Card Value** | `1.875rem` (30px) | `900` | `1.0` | Fibonacci card numbers. |
-| **Body Title** | `0.875rem` (14px) | `700` | `1.4` | Story title in input bar. |
-| **Label** | `0.75rem` (12px) | `600` | `1.4` | Participant names, badges. |
-| **Monospace** | `0.6875rem` (11px)| `700` | `1.3` | Room code badges. |
+| Level              | Size               | Weight | Line Height | Usage                          |
+| :----------------- | :----------------- | :----- | :---------- | :----------------------------- |
+| **Hero Title**     | `2.5rem` (40px)    | `900`  | `1.1`       | Landing page main heading.     |
+| **Section Header** | `1.25rem` (20px)   | `800`  | `1.25`      | Table title, analytics header. |
+| **Card Value**     | `1.875rem` (30px)  | `900`  | `1.0`       | Fibonacci card numbers.        |
+| **Body Title**     | `0.875rem` (14px)  | `700`  | `1.4`       | Story title in input bar.      |
+| **Label**          | `0.75rem` (12px)   | `600`  | `1.4`       | Participant names, badges.     |
+| **Monospace**      | `0.6875rem` (11px) | `700`  | `1.3`       | Room code badges.              |
 
 ---
 
@@ -55,6 +55,7 @@ Cards simulate physical playing cards using CSS 3D transforms:
 - `.rotate-y-180`: Rotates the card 180 degrees along the Y-axis on reveal.
 
 ### Card States
+
 - **Resting:** Soft border, neutral background.
 - **Hover:** Lifts slightly (`-translate-y-2`) with an indigo glow.
 - **Selected:** Lifts higher (`-translate-y-3`) with an indigo ring and corner indicator.
@@ -76,3 +77,15 @@ Cards simulate physical playing cards using CSS 3D transforms:
 2. **Keyboard:** All cards are real `<button>` elements with `aria-pressed` states. You can tab through them and hit `Enter` or `Space` to vote.
 3. **Focus Rings:** Focusable elements use `focus-visible:ring-2 focus-visible:ring-indigo-500`.
 4. **Labels:** Icon buttons include `aria-label` and `title` attributes.
+
+---
+
+## 6. Micro-Interactions & Reactions Motion
+
+Reactions use lightweight CSS keyframe animations designed for playful physical feedback:
+
+- **Flight Arc (`.animate-throw-arc`):** 450ms bezier curve starting off-screen with rotation into the target card center.
+- **Splat Burst (`.animate-splat-burst`):** 2500ms scale pop and slow opacity decay for egg yolk and tomato juice drips.
+- **Gas Mist (`.animate-gas-mist`):** 2600ms swelling gradient mist coupled with drifting `Zzz` text upward.
+- **Lightning Zap (`.animate-zap-flash`):** 1800ms high-voltage flash accompanied by electric vibration (`.animate-card-shake`).
+- **Cheers Celebration (`.animate-cheers-burst`):** 2500ms confetti explosion with bouncing party emojis.

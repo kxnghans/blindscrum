@@ -11,8 +11,6 @@ import {
   FIBONACCI_CARDS,
 } from "@/types/scrum";
 
-type NumericCard = (typeof FIBONACCI_CARDS)[number];
-
 /**
  * Calculates complete estimation analytics from an array of revealed votes.
  */
@@ -45,10 +43,8 @@ export function calculateVoteAnalytics(
     counts.set(vote, (counts.get(vote) ?? 0) + 1);
   }
 
-  // Extract numeric votes for mean, min, max, spread calculation
-  const numericVotes: number[] = activeVotes.filter(
-    (v): v is NumericCard => typeof v === "number",
-  );
+  // Calculate mean, min, max, spread across all numeric votes
+  const numericVotes: number[] = activeVotes;
 
   let average: number | null = null;
   let min: number | null = null;
@@ -81,13 +77,13 @@ export function calculateVoteAnalytics(
   // Has consensus if >= 70% of voters agreed on the mode and at least 2 people voted
   const hasConsensus = modePercentage >= 70 && activeVotes.length >= 2;
 
-  // Distribution across known Fibonacci cards + special options
+  // Distribution across known Fibonacci cards
   const distribution: VoteDistributionItem[] = [];
-  const knownCards: FibonacciValue[] = [...FIBONACCI_CARDS, "?", "☕"];
+  const knownCards: readonly FibonacciValue[] = FIBONACCI_CARDS;
 
   for (const card of knownCards) {
     const count = counts.get(card) ?? 0;
-    if (count > 0 || (typeof card === "number" && numericVotes.length > 0)) {
+    if (count > 0 || numericVotes.length > 0) {
       distribution.push({
         value: card,
         count,

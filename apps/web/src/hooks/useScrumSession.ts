@@ -16,6 +16,8 @@ import {
   type StoryQueueItem,
   type CompletedStory,
   type ScrumBroadcastEvent,
+  type TableReactionType,
+  type TableReactionPayload,
 } from "@/types/scrum";
 import { generateRandomScrumAlias, generateScrumAvatar } from "@/utils/persona";
 import { calculateVoteAnalytics } from "@/utils/analytics";
@@ -24,6 +26,7 @@ import {
   playCardSelectSound,
   playRevealSound,
   playConsensusSound,
+  playReactionSound,
 } from "@/utils/soundEffects";
 
 interface UseScrumSessionOptions {
@@ -72,18 +75,30 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   });
 
   // Ephemeral Room State
-  const [storyTitle, setStoryTitleState] = useState<string>("Sprint Feature Sizing");
+  const [storyTitle, setStoryTitleState] = useState<string>(
+    "Sprint Feature Sizing",
+  );
   const [status, setStatus] = useState<RoundStatus>("IDLE");
-  const [participants, setParticipants] = useState<Participant[]>(() => [currentUser]);
+  const [participants, setParticipants] = useState<Participant[]>(() => [
+    currentUser,
+  ]);
   const [myVote, setMyVote] = useState<FibonacciValue | null>(null);
-  const [revealedVotes, setRevealedVotes] = useState<Record<string, FibonacciValue>>({});
+  const [revealedVotes, setRevealedVotes] = useState<
+    Record<string, FibonacciValue>
+  >({});
   const [queue, setQueue] = useState<StoryQueueItem[]>([]);
-  const [completedStories, setCompletedStories] = useState<CompletedStory[]>([]);
+  const [completedStories, setCompletedStories] = useState<CompletedStory[]>(
+    [],
+  );
+  const [activeReactions, setActiveReactions] = useState<
+    TableReactionPayload[]
+  >([]);
   const [isConnected, setIsConnected] = useState<boolean>(true);
 
   // Local vote reference held safely on client until reveal
   const mySecretVoteRef = useRef<FibonacciValue | null>(null);
   const localBroadcastRef = useRef<BroadcastChannel | null>(null);
+  const sbChannelRef = useRef<RealtimeChannel | null>(null);
 
   // Ref for latest state to respond to state-sync requests
   const stateRef = useRef({ storyTitle, status, queue, completedStories });
@@ -100,18 +115,24 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
   // Merge revealed votes into participants list for rendering
   const enrichedParticipants = useMemo<Participant[]>(() => {
-    const earliestId = participants.length > 0
-      ? [...participants].sort((a, b) => a.joinedAt - b.joinedAt)[0]?.id
-      : currentUser.id;
+    const earliestId =
+      participants.length > 0
+        ? [...participants].sort((a, b) => a.joinedAt - b.joinedAt)[0]?.id
+        : currentUser.id;
 
     return participants.map((p) => {
-      const voteValue = status === "REVEALED" ? (revealedVotes[p.id] ?? null) : null;
-      const role: ParticipantRole = (isHost && p.id === currentUser.id) || p.id === earliestId ? "host" : "voter";
+      const voteValue =
+        status === "REVEALED" ? (revealedVotes[p.id] ?? null) : null;
+      const role: ParticipantRole =
+        (isHost && p.id === currentUser.id) || p.id === earliestId
+          ? "host"
+          : "voter";
 
       return {
         ...p,
         role,
-        vote: p.id === currentUser.id && status !== "REVEALED" ? myVote : voteValue,
+        vote:
+          p.id === currentUser.id && status !== "REVEALED" ? myVote : voteValue,
       };
     });
   }, [participants, status, revealedVotes, currentUser.id, isHost, myVote]);
@@ -152,108 +173,119 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   );
 
   // Incoming event router
-  const handleIncomingEvent = useCallback(
-    (event: ScrumBroadcastEvent) => {
-      switch (event.type) {
-        case "UPDATE_TITLE":
-          setStoryTitleState(event.payload.title);
-          break;
+  const handleIncomingEvent = useCallback((event: ScrumBroadcastEvent) => {
+    switch (event.type) {
+      case "UPDATE_TITLE":
+        setStoryTitleState(event.payload.title);
+        break;
 
-        case "CAST_BLIND_VOTE":
-          setParticipants((prev) =>
-            prev.map((p) =>
-              p.id === event.payload.participantId
-                ? { ...p, hasVoted: event.payload.hasVoted }
-                : p,
-            ),
-          );
-          break;
+      case "CAST_BLIND_VOTE":
+        setParticipants((prev) =>
+          prev.map((p) =>
+            p.id === event.payload.participantId
+              ? { ...p, hasVoted: event.payload.hasVoted }
+              : p,
+          ),
+        );
+        break;
 
-        case "REVEAL_VOTES":
-          setStatus("REVEALED");
-          setRevealedVotes(event.payload.votes);
-          playRevealSound();
+      case "REVEAL_VOTES":
+        setStatus("REVEALED");
+        setRevealedVotes(event.payload.votes);
+        playRevealSound();
 
-          // Check for full team consensus celebration
-          {
-            const votesList = Object.values(event.payload.votes);
-            const calculated = calculateVoteAnalytics(votesList);
-            if (calculated.hasConsensus && calculated.totalVotes >= 2) {
-              playConsensusSound();
-              if (typeof window !== "undefined") {
-                confetti({
-                  particleCount: 80,
-                  spread: 70,
-                  origin: { y: 0.6 },
-                });
-              }
+        // Check for full team consensus celebration
+        {
+          const votesList = Object.values(event.payload.votes);
+          const calculated = calculateVoteAnalytics(votesList);
+          if (calculated.hasConsensus && calculated.totalVotes >= 2) {
+            playConsensusSound();
+            if (typeof window !== "undefined") {
+              confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 },
+              });
             }
           }
-          break;
+        }
+        break;
 
-        case "RESET_ROUND":
-          setStatus("VOTING");
-          setRevealedVotes({});
-          setMyVote(null);
-          mySecretVoteRef.current = null;
-          if (event.payload.storyTitle) {
-            setStoryTitleState(event.payload.storyTitle);
-          }
-          setParticipants((prev) =>
-            prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
-          );
-          break;
-
-        case "ADD_QUEUE_ITEM":
-          setQueue((prev) => {
-            if (prev.some((item) => item.id === event.payload.item.id)) return prev;
-            return [...prev, event.payload.item];
-          });
-          break;
-
-        case "REMOVE_QUEUE_ITEM":
-          setQueue((prev) => prev.filter((item) => item.id !== event.payload.id));
-          break;
-
-        case "REORDER_QUEUE":
-          setQueue(event.payload.queue);
-          break;
-
-        case "NEXT_STORY":
-          // Archive previous story if estimate exists
-          if (event.payload.archivedEstimate) {
-            setCompletedStories((prev) => [
-              {
-                id: `completed_${Date.now()}`,
-                title: stateRef.current.storyTitle,
-                estimate: event.payload.archivedEstimate ?? "?",
-                completedAt: Date.now(),
-              },
-              ...prev,
-            ]);
-          }
-          // Promote next story from queue
-          setStoryTitleState(event.payload.nextStory.title);
-          setQueue((prev) => prev.filter((item) => item.id !== event.payload.nextStory.id));
-          setStatus("VOTING");
-          setRevealedVotes({});
-          setMyVote(null);
-          mySecretVoteRef.current = null;
-          setParticipants((prev) =>
-            prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
-          );
-          break;
-
-        case "SYNC_STATE":
+      case "RESET_ROUND":
+        setStatus("VOTING");
+        setRevealedVotes({});
+        setMyVote(null);
+        mySecretVoteRef.current = null;
+        if (event.payload.storyTitle) {
           setStoryTitleState(event.payload.storyTitle);
-          setStatus(event.payload.status);
-          setQueue(event.payload.queue);
-          setCompletedStories(event.payload.completedStories);
-          break;
-      }
-    },
-    [],
-  );
+        }
+        setParticipants((prev) =>
+          prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
+        );
+        break;
+
+      case "ADD_QUEUE_ITEM":
+        setQueue((prev) => {
+          if (prev.some((item) => item.id === event.payload.item.id))
+            return prev;
+          return [...prev, event.payload.item];
+        });
+        break;
+
+      case "REMOVE_QUEUE_ITEM":
+        setQueue((prev) => prev.filter((item) => item.id !== event.payload.id));
+        break;
+
+      case "REORDER_QUEUE":
+        setQueue(event.payload.queue);
+        break;
+
+      case "NEXT_STORY":
+        // Archive previous story if estimate exists
+        if (typeof event.payload.archivedEstimate === "number") {
+          const estimateVal = event.payload.archivedEstimate;
+          setCompletedStories((prev) => [
+            {
+              id: `completed_${Date.now()}`,
+              title: stateRef.current.storyTitle,
+              estimate: estimateVal,
+              completedAt: Date.now(),
+            },
+            ...prev,
+          ]);
+        }
+        // Promote next story from queue
+        setStoryTitleState(event.payload.nextStory.title);
+        setQueue((prev) =>
+          prev.filter((item) => item.id !== event.payload.nextStory.id),
+        );
+        setStatus("VOTING");
+        setRevealedVotes({});
+        setMyVote(null);
+        mySecretVoteRef.current = null;
+        setParticipants((prev) =>
+          prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
+        );
+        break;
+
+      case "SYNC_STATE":
+        setStoryTitleState(event.payload.storyTitle);
+        setStatus(event.payload.status);
+        setQueue(event.payload.queue);
+        setCompletedStories(event.payload.completedStories);
+        break;
+
+      case "THROW_REACTION":
+        playReactionSound(event.payload.type);
+        setActiveReactions((prev) => [...prev.slice(-15), event.payload]);
+        setTimeout(() => {
+          setActiveReactions((prev) =>
+            prev.filter((r) => r.id !== event.payload.id),
+          );
+        }, 3000);
+        break;
+    }
+  }, []);
 
   // Setup Realtime & Broadcast channels
   useEffect(() => {
@@ -281,6 +313,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
           broadcast: { ack: false },
         },
       });
+      sbChannelRef.current = sbChannel;
 
       // Handle presence sync (who is currently in the room)
       sbChannel.on("presence", { event: "sync" }, () => {
@@ -310,10 +343,10 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
             }
           }
           setParticipants((prev) => {
-            // Keep local voted flags if present
+            // Keep local voted flags or use presence hasVoted
             return presentParticipants.map((p) => {
               const match = prev.find((x) => x.id === p.id);
-              return match ? { ...p, hasVoted: match.hasVoted } : p;
+              return { ...p, hasVoted: p.hasVoted || Boolean(match?.hasVoted) };
             });
           });
         }
@@ -346,6 +379,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       if (sbChannel) {
         sbChannel.unsubscribe();
       }
+      sbChannelRef.current = null;
     };
   }, [roomCode, currentUser, handleIncomingEvent]);
 
@@ -367,8 +401,19 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
       // Mark locally as voted
       setParticipants((prev) =>
-        prev.map((p) => (p.id === currentUser.id ? { ...p, hasVoted: true } : p)),
+        prev.map((p) =>
+          p.id === currentUser.id ? { ...p, hasVoted: true } : p,
+        ),
       );
+
+      // Track voted state in presence
+      sbChannelRef.current?.track({
+        id: currentUser.id,
+        name: currentUser.name,
+        avatar: currentUser.avatar,
+        hasVoted: true,
+        joinedAt: currentUser.joinedAt,
+      });
 
       // Broadcast masked vote token across network
       broadcast({
@@ -376,7 +421,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         payload: { participantId: currentUser.id, hasVoted: true },
       });
     },
-    [currentUser.id, broadcast],
+    [currentUser, broadcast],
   );
 
   const revealVotes = useCallback(() => {
@@ -420,12 +465,21 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
       );
 
+      // Reset voting state in presence
+      sbChannelRef.current?.track({
+        id: currentUser.id,
+        name: currentUser.name,
+        avatar: currentUser.avatar,
+        hasVoted: false,
+        joinedAt: currentUser.joinedAt,
+      });
+
       broadcast({
         type: "RESET_ROUND",
         payload: { storyTitle: newTitle },
       });
     },
-    [broadcast],
+    [currentUser, broadcast],
   );
 
   const addToQueue = useCallback(
@@ -467,12 +521,13 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
     // Archive current story if votes were revealed
     const archivedEstimate = analytics?.mode ?? analytics?.average ?? null;
-    if (archivedEstimate) {
+    if (typeof archivedEstimate === "number") {
+      const estimateVal = archivedEstimate;
       setCompletedStories((prev) => [
         {
           id: `completed_${Date.now()}`,
           title: storyTitle,
-          estimate: archivedEstimate,
+          estimate: estimateVal,
           completedAt: Date.now(),
         },
         ...prev,
@@ -489,6 +544,15 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       prev.map((p) => ({ ...p, hasVoted: false, vote: null })),
     );
 
+    // Reset voting state in presence for next story
+    sbChannelRef.current?.track({
+      id: currentUser.id,
+      name: currentUser.name,
+      avatar: currentUser.avatar,
+      hasVoted: false,
+      joinedAt: currentUser.joinedAt,
+    });
+
     broadcast({
       type: "NEXT_STORY",
       payload: {
@@ -496,7 +560,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         archivedEstimate,
       },
     });
-  }, [queue, analytics, storyTitle, broadcast]);
+  }, [queue, analytics, storyTitle, currentUser, broadcast]);
 
   const updateUserProfile = useCallback(
     (newName: string, newAvatar?: string) => {
@@ -509,13 +573,49 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       };
 
       setCurrentUser(updated);
-      sessionStorage.setItem(`blindscrum_user_${roomCode}`, JSON.stringify(updated));
+      sessionStorage.setItem(
+        `blindscrum_user_${roomCode}`,
+        JSON.stringify(updated),
+      );
+
+      // Track updated identity in presence
+      sbChannelRef.current?.track({
+        id: updated.id,
+        name: updated.name,
+        avatar: updated.avatar,
+        hasVoted: myVote !== null,
+        joinedAt: updated.joinedAt,
+      });
 
       setParticipants((prev) =>
         prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)),
       );
     },
-    [currentUser, roomCode],
+    [currentUser, roomCode, myVote],
+  );
+
+  const sendReaction = useCallback(
+    (targetId: string, type: TableReactionType) => {
+      const payload: TableReactionPayload = {
+        id: `rx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        targetId,
+        type,
+        timestamp: Date.now(),
+      };
+
+      // Play local sound and queue ephemeral animation
+      playReactionSound(type);
+      setActiveReactions((prev) => [...prev.slice(-15), payload]);
+      setTimeout(() => {
+        setActiveReactions((prev) => prev.filter((r) => r.id !== payload.id));
+      }, 3000);
+
+      // Broadcast reaction to all connected peers
+      broadcast({ type: "THROW_REACTION", payload });
+    },
+    [currentUser.id, currentUser.name, broadcast],
   );
 
   return {
@@ -529,6 +629,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
     queue,
     completedStories,
     analytics,
+    activeReactions,
     actions: {
       updateStoryTitle,
       castVote,
@@ -539,6 +640,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       reorderQueue,
       nextStory,
       updateUserProfile,
+      sendReaction,
     },
   };
 }

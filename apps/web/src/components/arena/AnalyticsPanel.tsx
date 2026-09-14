@@ -86,8 +86,8 @@ export function AnalyticsPanel({
                 Vote Results
               </h3>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Results for: <span className="font-semibold text-slate-700 dark:text-slate-300">&ldquo;{storyTitle}&rdquo;</span>
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-0.5 truncate max-w-md">
+              &ldquo;{storyTitle}&rdquo;
             </p>
           </div>
 
@@ -110,14 +110,16 @@ export function AnalyticsPanel({
           <div className="my-5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-medium">
             <Award className="w-5 h-5 text-emerald-500 shrink-0" />
             <span>
-              The team agreed on <strong>{mode} points</strong> ({modePercentage}% consensus).
+              The team agreed on <strong>{mode} points</strong> (
+              {modePercentage}% consensus).
             </span>
           </div>
         ) : spread !== null && spread >= 5 ? (
           <div className="my-5 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
             <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             <span>
-              Wide spread ({min} to {max} points). Talk through the outliers before locking it in.
+              Wide spread ({min} to {max} points). Talk through the outliers
+              before locking it in.
             </span>
           </div>
         ) : null}
@@ -170,7 +172,9 @@ export function AnalyticsPanel({
                 {min !== null && max !== null ? `${min} – ${max}` : "N/A"}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {spread !== null ? `Difference of ${spread} pts` : "Single vote"}
+                {spread !== null
+                  ? `Difference of ${spread} pts`
+                  : "Single vote"}
               </p>
             </div>
           </div>
@@ -188,7 +192,10 @@ export function AnalyticsPanel({
               const ratio = dist.count / maxBarCount;
 
               return (
-                <div key={String(dist.value)} className="flex items-center gap-3">
+                <div
+                  key={String(dist.value)}
+                  className="flex items-center gap-3"
+                >
                   <div className="w-10 text-right font-mono font-bold text-xs text-slate-700 dark:text-slate-300 shrink-0">
                     {dist.value}
                   </div>
@@ -200,7 +207,9 @@ export function AnalyticsPanel({
                           ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm"
                           : "bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200"
                       }`}
-                      style={{ width: `${Math.max(ratio * 100, dist.count > 0 ? 12 : 0)}%` }}
+                      style={{
+                        width: `${Math.max(ratio * 100, dist.count > 0 ? 12 : 0)}%`,
+                      }}
                     >
                       {dist.count > 0 && (
                         <span className="text-[10px] font-extrabold tracking-tight">

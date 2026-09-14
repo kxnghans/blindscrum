@@ -5,7 +5,7 @@
  */
 
 export const FIBONACCI_CARDS = [1, 2, 3, 5, 8, 13, 20] as const;
-export type FibonacciValue = (typeof FIBONACCI_CARDS)[number] | "?" | "☕";
+export type FibonacciValue = (typeof FIBONACCI_CARDS)[number];
 
 export type RoundStatus = "IDLE" | "VOTING" | "REVEALED";
 
@@ -65,13 +65,34 @@ export interface ScrumRoomState {
   completedStories: CompletedStory[];
 }
 
+export type TableReactionType = "egg" | "tomato" | "gas" | "cheers" | "zap";
+
+export interface TableReactionPayload {
+  id: string;
+  senderId: string;
+  senderName: string;
+  targetId: string;
+  type: TableReactionType;
+  timestamp: number;
+}
+
 export type ScrumBroadcastEvent =
   | { type: "SYNC_STATE"; payload: ScrumRoomState }
   | { type: "UPDATE_TITLE"; payload: { title: string } }
-  | { type: "CAST_BLIND_VOTE"; payload: { participantId: string; hasVoted: boolean } }
+  | {
+      type: "CAST_BLIND_VOTE";
+      payload: { participantId: string; hasVoted: boolean };
+    }
   | { type: "REVEAL_VOTES"; payload: { votes: Record<string, FibonacciValue> } }
   | { type: "RESET_ROUND"; payload: { storyTitle?: string } }
   | { type: "ADD_QUEUE_ITEM"; payload: { item: StoryQueueItem } }
   | { type: "REMOVE_QUEUE_ITEM"; payload: { id: string } }
   | { type: "REORDER_QUEUE"; payload: { queue: StoryQueueItem[] } }
-  | { type: "NEXT_STORY"; payload: { nextStory: StoryQueueItem; archivedEstimate?: FibonacciValue | number | null } };
+  | {
+      type: "NEXT_STORY";
+      payload: {
+        nextStory: StoryQueueItem;
+        archivedEstimate?: FibonacciValue | number | null;
+      };
+    }
+  | { type: "THROW_REACTION"; payload: TableReactionPayload };

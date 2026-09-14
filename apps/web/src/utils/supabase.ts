@@ -7,9 +7,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gjnehllvhdfpsllmiwlc.supabase.co";
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://gjnehllvhdfpsllmiwlc.supabase.co";
 const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_pYucYeHAm4WU5QwPgFhosw_aiM7B5H0";
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "sb_publishable_pYucYeHAm4WU5QwPgFhosw_aiM7B5H0";
 
 let clientInstance: SupabaseClient | null = null;
 

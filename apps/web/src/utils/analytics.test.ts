@@ -37,15 +37,22 @@ describe("calculateVoteAnalytics", () => {
     expect(result.hasConsensus).toBe(true);
   });
 
-  it("should correctly handle non-numeric votes like ? and ☕", () => {
-    const votes: FibonacciValue[] = [5, 5, "?", "☕"];
+  it("should correctly compute distribution across numeric Fibonacci values", () => {
+    const votes: FibonacciValue[] = [1, 2, 5, 5];
     const result = calculateVoteAnalytics(votes);
 
     expect(result.totalVotes).toBe(4);
-    // (5 + 5) / 2 = 5
-    expect(result.average).toBe(5);
+    // (1 + 2 + 5 + 5) / 4 = 13 / 4 = 3.25 -> 3.3
+    expect(result.average).toBe(3.3);
     expect(result.mode).toBe(5);
-    expect(result.distribution.some((d) => d.value === "?" && d.count === 1)).toBe(true);
-    expect(result.distribution.some((d) => d.value === "☕" && d.count === 1)).toBe(true);
+    expect(
+      result.distribution.some((d) => d.value === 5 && d.count === 2),
+    ).toBe(true);
+    expect(
+      result.distribution.some((d) => d.value === 1 && d.count === 1),
+    ).toBe(true);
+    expect(
+      result.distribution.some((d) => d.value === 2 && d.count === 1),
+    ).toBe(true);
   });
 });

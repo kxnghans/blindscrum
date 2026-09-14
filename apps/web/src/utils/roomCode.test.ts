@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { generateRoomCode, normalizeRoomCode, isValidRoomCode } from "./roomCode";
+import {
+  generateRoomCode,
+  normalizeRoomCode,
+  isValidRoomCode,
+} from "./roomCode";
 
 describe("roomCode utilities", () => {
   it("should generate room codes in PREFIX-NUMBER format", () => {

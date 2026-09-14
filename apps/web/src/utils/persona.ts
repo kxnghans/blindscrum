@@ -125,3 +125,45 @@ export function generateScrumAvatar(seed: string): string {
 
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
+
+export interface AvatarPreset {
+  id: string;
+  name: string;
+  avatar: string;
+}
+
+/**
+ * Curated preset avatars spanning distinct visual styles and color palettes.
+ */
+export const AVATAR_PRESETS: AvatarPreset[] = [
+  {
+    id: "falcon",
+    name: "Falcon",
+    avatar: generateScrumAvatar("Velocity Falcon"),
+  },
+  {
+    id: "cheetah",
+    name: "Cheetah",
+    avatar: generateScrumAvatar("Quantum Cheetah"),
+  },
+  { id: "otter", name: "Otter", avatar: generateScrumAvatar("Agile Otter") },
+  { id: "lynx", name: "Lynx", avatar: generateScrumAvatar("Stealth Lynx") },
+  {
+    id: "phoenix",
+    name: "Phoenix",
+    avatar: generateScrumAvatar("Solar Phoenix"),
+  },
+  { id: "panda", name: "Panda", avatar: generateScrumAvatar("Zen Panda") },
+  {
+    id: "wizard",
+    name: "Wizard",
+    avatar: generateScrumAvatar("Cosmic Wizard"),
+  },
+  { id: "ninja", name: "Ninja", avatar: generateScrumAvatar("Cyber Ninja") },
+  {
+    id: "voyager",
+    name: "Voyager",
+    avatar: generateScrumAvatar("Vortex Voyager"),
+  },
+  { id: "badger", name: "Badger", avatar: generateScrumAvatar("Turbo Badger") },
+];

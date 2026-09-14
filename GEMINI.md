@@ -15,7 +15,7 @@ BlindScrum is a planning poker tool for engineering teams. It stops people from 
 - **State & Realtime:** Ephemeral Supabase Realtime Broadcast & Presence with local `BroadcastChannel` fallback
 - **Speech Engine:** Browser W3C `SpeechRecognition` / `webkitSpeechRecognition`
 - **Testing:** Vitest
-- **Deployment:** Cloudflare Pages/Workers (`@opennextjs/cloudflare` & `wrangler`)
+- **Deployment:** Vercel (Native zero-config Next.js App Router deployment)
 
 ---
 
@@ -34,7 +34,7 @@ BlindScrum is a planning poker tool for engineering teams. It stops people from 
 
 - `apps/web`: Next.js 16 web application.
   - `src/app`: App Router pages (`/` landing, `/room/[code]` arena) and `globals.css`.
-  - `src/components/arena`: Sizing arena components (StoryInputBar, FibonacciDeck, PokerTable, AnalyticsPanel).
+  - `src/components/arena`: Sizing arena components (StoryPipeline, StoryInputBar, FibonacciDeck, PokerTable, AnalyticsPanel).
   - `src/components/queue`: Story queue slide-over drawer.
   - `src/components/shared`: Header, theme toggle, and profile modal.
   - `src/hooks`: Real-time session state and speech recognition hooks.
@@ -48,15 +48,15 @@ BlindScrum is a planning poker tool for engineering teams. It stops people from 
 
 Run from the repository root:
 
-| Command | Action |
-| :--- | :--- |
-| `pnpm dev` | Starts local Next.js dev server (`next dev --turbo`). |
-| `pnpm build` | Production Next.js build (`next build`). |
-| `pnpm test` | Runs Vitest test suite. |
-| `pnpm check-types` | Strict TypeScript check (`tsc --noEmit`). |
-| `pnpm lint` | Runs ESLint 9. |
-| `pnpm pages:build` | Builds Cloudflare worker via OpenNext. |
-| `pnpm format` | Formats files with Prettier. |
+| Command            | Action                                                |
+| :----------------- | :---------------------------------------------------- |
+| `pnpm dev`         | Starts local Next.js dev server (`next dev --turbo`). |
+| `pnpm build`       | Production Next.js build (`next build`).              |
+| `pnpm test`        | Runs Vitest test suite.                               |
+| `pnpm check-types` | Strict TypeScript check (`tsc --noEmit`).             |
+| `pnpm lint`        | Runs ESLint 9.                                        |
+| `pnpm deploy`      | Production deployment to Vercel (`vercel --prod`).    |
+| `pnpm format`      | Formats files with Prettier.                          |
 
 ---
 
