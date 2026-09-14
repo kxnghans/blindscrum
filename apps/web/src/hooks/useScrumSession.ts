@@ -107,18 +107,32 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
     stateRef.current = { storyTitle, status, queue, completedStories, participants };
   }, [storyTitle, status, queue, completedStories, participants]);
 
+  const currentUserRef = useRef(currentUser);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
   // Determine if current user is the host (earliest joined participant or sole member)
   const isHost = useMemo(() => {
     if (participants.length === 0) return true;
-    const sorted = [...participants].sort((a, b) => a.joinedAt - b.joinedAt);
+    const sorted = [...participants].sort(
+      (a, b) => a.joinedAt - b.joinedAt || a.id.localeCompare(b.id),
+    );
     return sorted[0]?.id === currentUser.id;
   }, [participants, currentUser.id]);
+
+  const isHostRef = useRef(isHost);
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
 
   // Merge revealed votes into participants list for rendering
   const enrichedParticipants = useMemo<Participant[]>(() => {
     const earliestId =
       participants.length > 0
-        ? [...participants].sort((a, b) => a.joinedAt - b.joinedAt)[0]?.id
+        ? [...participants].sort(
+            (a, b) => a.joinedAt - b.joinedAt || a.id.localeCompare(b.id),
+          )[0]?.id
         : currentUser.id;
 
     return participants.map((p) => {
@@ -176,21 +190,37 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
           break;
 
         case "CAST_BLIND_VOTE":
-          setParticipants((prev) =>
-            prev.map((p) =>
+          setParticipants((prev) => {
+            const exists = prev.some((p) => p.id === event.payload.participantId);
+            if (!exists) {
+              return [
+                ...prev,
+                {
+                  id: event.payload.participantId,
+                  name: "Teammate",
+                  avatar: "",
+                  role: "voter",
+                  hasVoted: event.payload.hasVoted,
+                  vote: null,
+                  joinedAt: Date.now(),
+                },
+              ];
+            }
+            return prev.map((p) =>
               p.id === event.payload.participantId
                 ? { ...p, hasVoted: event.payload.hasVoted }
                 : p,
-            ),
-          );
+            );
+          });
           break;
 
         case "REVEAL_VOTES": {
           setStatus("REVEALED");
+          const myId = currentUserRef.current.id;
           const mergedVotes = {
             ...event.payload.votes,
             ...(mySecretVoteRef.current !== null
-              ? { [currentUser.id]: mySecretVoteRef.current }
+              ? { [myId]: mySecretVoteRef.current }
               : {}),
           };
           setRevealedVotes(mergedVotes);
@@ -199,7 +229,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
           // If local secret vote differed or was missing from incoming bundle, rebroadcast merged votes
           if (
             mySecretVoteRef.current !== null &&
-            event.payload.votes[currentUser.id] !== mySecretVoteRef.current
+            event.payload.votes[myId] !== mySecretVoteRef.current
           ) {
             broadcast({
               type: "REVEAL_VOTES",
@@ -282,7 +312,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
         case "SYNC_REQUEST":
           // Host peer fulfills sync request for newcomer
-          if (isHost) {
+          if (isHostRef.current) {
             const snapshot: ScrumRoomState = {
               roomCode,
               storyTitle: stateRef.current.storyTitle,
@@ -303,9 +333,9 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
           if (event.payload.participants && event.payload.participants.length > 0) {
             setParticipants((prev) => {
               const map = new Map<string, Participant>();
-              map.set(currentUser.id, currentUser);
+              map.set(currentUserRef.current.id, currentUserRef.current);
               for (const p of event.payload.participants) {
-                if (p.id !== currentUser.id) map.set(p.id, p);
+                if (p.id !== currentUserRef.current.id) map.set(p.id, p);
               }
               for (const p of prev) {
                 if (!map.has(p.id)) map.set(p.id, p);
@@ -324,10 +354,39 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
             );
           }, 3000);
           break;
+
+        case "PEER_ANNOUNCE": {
+          const peer = event.payload;
+          if (peer.id !== currentUserRef.current.id) {
+            setParticipants((prev) => {
+              const exists = prev.some((p) => p.id === peer.id);
+              if (!exists) {
+                // Reply with our own identity so the new peer immediately learns about us
+                broadcast({ type: "PEER_ANNOUNCE", payload: currentUserRef.current });
+                return [...prev, peer];
+              }
+              return prev.map((p) => (p.id === peer.id ? { ...p, ...peer } : p));
+            });
+          }
+          break;
+        }
+
+        case "PEER_LEAVE": {
+          const departingId = event.payload.id;
+          if (departingId !== currentUserRef.current.id) {
+            setParticipants((prev) => prev.filter((p) => p.id !== departingId));
+          }
+          break;
+        }
       }
     },
-    [broadcast, currentUser, isHost, roomCode],
+    [broadcast, roomCode],
   );
+
+  const handleIncomingEventRef = useRef(handleIncomingEvent);
+  useEffect(() => {
+    handleIncomingEventRef.current = handleIncomingEvent;
+  });
 
   // Setup WebRTC P2P Session & local BroadcastChannel
   useEffect(() => {
@@ -340,7 +399,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
     bc.onmessage = (msgEvent: MessageEvent<ScrumBroadcastEvent>) => {
       if (msgEvent.data) {
-        handleIncomingEvent(msgEvent.data);
+        handleIncomingEventRef.current(msgEvent.data);
       }
     };
 
@@ -348,16 +407,16 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
     const peerPersonas = peerPersonasRef.current;
     const p2p = createP2PSession({
       roomCode,
-      currentUser,
+      currentUser: currentUserRef.current,
       onEvent: (event) => {
-        handleIncomingEvent(event);
+        handleIncomingEventRef.current(event);
       },
       onPeerJoin: () => {
         setIsConnected(true);
         // Request room state sync from existing peers
         p2p?.broadcast({
           type: "SYNC_REQUEST",
-          payload: { requesterId: currentUser.id },
+          payload: { requesterId: currentUserRef.current.id },
         });
       },
       onPeerLeave: (peerId) => {
@@ -368,7 +427,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
         }
       },
       onPeerPersona: (peerId, participant) => {
-        if (participant.id !== currentUser.id) {
+        if (participant.id !== currentUserRef.current.id) {
           peerPersonas.set(peerId, participant);
           setParticipants((prev) => {
             const others = prev.filter((p) => p.id !== participant.id);
@@ -380,7 +439,31 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
     p2pSessionRef.current = p2p;
 
+    // Announce identity and request room state snapshot across both channels
+    broadcast({ type: "PEER_ANNOUNCE", payload: currentUserRef.current });
+    broadcast({
+      type: "SYNC_REQUEST",
+      payload: { requesterId: currentUserRef.current.id },
+    });
+
+    // Graceful peer departure handler on tab close / reload
+    const handleBeforeUnload = () => {
+      try {
+        if (localBroadcastRef.current) {
+          localBroadcastRef.current.postMessage({
+            type: "PEER_LEAVE",
+            payload: { id: currentUserRef.current.id },
+          });
+        }
+      } catch {
+        // Channel closed
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      handleBeforeUnload();
       bc.close();
       if (p2p) {
         p2p.destroy();
@@ -388,7 +471,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       p2pSessionRef.current = null;
       peerPersonas.clear();
     };
-  }, [roomCode, currentUser, handleIncomingEvent]);
+  }, [roomCode, broadcast]);
 
   // User Actions
   const updateStoryTitle = useCallback(
@@ -425,16 +508,14 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   const revealVotes = useCallback(() => {
     // Collect local vote and assemble vote bundle
     const collected: Record<string, FibonacciValue> = {};
-    if (mySecretVoteRef.current) {
+    if (mySecretVoteRef.current !== null) {
       collected[currentUser.id] = mySecretVoteRef.current;
     }
 
-    // Include other participants' votes if already known or broadcasted
-    participants.forEach((p) => {
-      if (p.id === currentUser.id && mySecretVoteRef.current) {
-        collected[p.id] = mySecretVoteRef.current;
-      } else if (p.hasVoted && !collected[p.id]) {
-        collected[p.id] = mySecretVoteRef.current ?? 5;
+    // Include any previously revealed votes if present
+    Object.entries(revealedVotes).forEach(([pid, val]) => {
+      if (val !== null && val !== undefined) {
+        collected[pid] = val;
       }
     });
 
@@ -446,7 +527,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       type: "REVEAL_VOTES",
       payload: { votes: collected },
     });
-  }, [currentUser.id, participants, broadcast]);
+  }, [currentUser.id, revealedVotes, broadcast]);
 
   const resetRound = useCallback(
     (newTitle?: string) => {

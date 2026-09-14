@@ -96,4 +96,6 @@ export type ScrumBroadcastEvent =
       };
     }
   | { type: "THROW_REACTION"; payload: TableReactionPayload }
-  | { type: "SYNC_REQUEST"; payload: { requesterId: string } };
+  | { type: "SYNC_REQUEST"; payload: { requesterId: string } }
+  | { type: "PEER_ANNOUNCE"; payload: Participant }
+  | { type: "PEER_LEAVE"; payload: { id: string } };
