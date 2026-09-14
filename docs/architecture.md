@@ -4,113 +4,164 @@ This document details the high-fidelity system design, real-time protocols, stat
 
 ---
 
-## 1. High-Level System Architecture
+## 1. Master System Context Architecture
 
-BlindScrum operates as an ephemeral real-time client application with zero persistent storage requirements. State is synchronized across peers using WebSocket presence and broadcast clusters with a multi-tab BroadcastChannel failover.
+BlindScrum operates as an ephemeral real-time client application with zero persistent database storage. State is synchronized across distributed clients using WebSocket presence and broadcast clusters with a same-device BroadcastChannel failover.
 
 ```mermaid
 flowchart LR
-    subgraph Clients["Connected Team Clients"]
-        Host["Host Client\n(Room Creator)"]
-        Voter1["Participant A\n(Voice / Text Input)"]
-        Voter2["Participant B\n(Fibonacci Deck)"]
+    subgraph Clients["Connected Client Endpoints"]
+        HostClient(["Host Browser Session<br/>Room Creator Controller<br/>apps/web/src/app/room/[code]/page.tsx"])
+        VoterA(["Participant A Browser<br/>Voice Input & Cards<br/>apps/web/src/app/room/[code]/page.tsx"])
+        VoterB(["Participant B Browser<br/>Fibonacci Estimation Deck<br/>apps/web/src/app/room/[code]/page.tsx"])
     end
 
-    subgraph RealtimeSync["Ephemeral Synchronization Layer"]
-        SupabasePresence["Supabase Realtime\nPresence Channel\n(blindscrum:CODE)"]
-        SupabaseBroadcast["Supabase Realtime\nBroadcast Channel\n(scrum_event)"]
-        LocalBC["Browser Native\nBroadcastChannel\n(Same-Device Fallback)"]
+    subgraph RealtimeLayer["Ephemeral Realtime Transport Layer"]
+        SupabasePresence[("Supabase Presence Cluster<br/>Channel: blindscrum:CODE<br/>Peer Discovery & Roles")]
+        SupabaseBroadcast[("Supabase Broadcast Channel<br/>Event: scrum_event<br/>Zero-Persistence PubSub")]
+        LocalBC[("Browser BroadcastChannel<br/>Fallback: blindscrum_CODE<br/>Same-Device Multi-Tab Sync")]
     end
 
-    subgraph DomainCore["Domain Engine & State"]
-        StateMachine["Scrum Session State\n(useScrumSession)"]
-        VoiceEngine["Speech-to-Text\n(useVoiceSearch)"]
-        QueueSystem["Async Story Queue\n(FIFO / Reorder)"]
-        AnalyticsEngine["Consensus Analytics\n(calculateVoteAnalytics)"]
+    subgraph CoreHooks["Client Orchestration Subroutines"]
+        SessionHook[["useScrumSession Hook<br/>State Machine & Presence<br/>apps/web/src/hooks/useScrumSession.ts"]]
+        VoiceHook[["useVoiceSearch Hook<br/>W3C SpeechRecognition<br/>apps/web/src/hooks/useVoiceSearch.ts"]]
     end
 
-    Host <--> SupabasePresence
-    Host <--> SupabaseBroadcast
-    Voter1 <--> SupabasePresence
-    Voter1 <--> SupabaseBroadcast
-    Voter2 <--> SupabasePresence
-    Voter2 <--> SupabaseBroadcast
+    subgraph DomainEngines["Domain Logic & Computations"]
+        QueueEngine["Story Queue State<br/>Async FIFO Buffer<br/>apps/web/src/types/scrum.ts"]
+        AnalyticsEngine["Consensus Analytics<br/>Mean, Mode, & Spread<br/>apps/web/src/utils/analytics.ts"]
+        AudioSynth["Procedural Audio Synth<br/>Web Audio Feedback<br/>apps/web/src/utils/soundEffects.ts"]
+    end
 
-    SupabaseBroadcast <--> StateMachine
-    LocalBC <--> StateMachine
-    VoiceEngine --> StateMachine
-    StateMachine --> QueueSystem
-    StateMachine --> AnalyticsEngine
+    HostClient <--> SessionHook
+    VoterA <--> SessionHook
+    VoterB <--> SessionHook
+
+    SessionHook <--> SupabasePresence
+    SessionHook <--> SupabaseBroadcast
+    SessionHook <--> LocalBC
+
+    VoiceHook --> SessionHook
+    SessionHook --> QueueEngine
+    SessionHook --> AnalyticsEngine
+    SessionHook --> AudioSynth
 ```
 
 ---
 
 ## 2. Ephemeral Estimation Lifecycle State Machine
 
-The core estimation workflow enforces cognitive neutrality through a strict 3-phase state machine:
+The estimation cycle prevents cognitive anchoring through a strict 3-phase state machine where vote numbers remain isolated until host-triggered revelation.
 
 ```mermaid
 flowchart LR
-    IDLE["1. IDLE / SETUP\nHost sets project title\nTeammates join via URL"] --> VOTING["2. VOTING (Blind)\nCards locked face down\nBroadcast {hasVoted: true}\nValue held locally"]
-    VOTING --> REVEALED["3. REVEALED\nSynchronized 3D card flip\nAnalytics rendered\nConfetti on consensus"]
-    REVEALED -->|Revote / Outlier Debate| VOTING
-    REVEALED -->|Pop Next Story| IDLE
-```
+    subgraph Phase1["Phase 1: Setup & Input"]
+        IdleState(["IDLE / READY State<br/>Room active, cards open<br/>apps/web/src/types/scrum.ts"])
+        HostInput["Host Sets Story Title<br/>Via typing or microphone<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
+        AsyncQueue["Teammates Queue Stories<br/>Async Drawer Additions<br/>apps/web/src/components/queue/StoryQueueDrawer.tsx"]
+    end
 
-### Stage Details:
-1. **Setup / Story Input:**
-   - Host types or speaks a story title via the microphone button (`useVoiceSearch`).
-   - Teammates can asynchronously append upcoming items into the story queue drawer at any time.
-2. **Blind Voting:**
-   - Voters tap their card from the Fibonacci sequence (`1, 2, 3, 5, 8, 13, 20, ?, ☕`).
-   - The selected number is stored in local client memory.
-   - Only a masked token `{ participantId, hasVoted: true }` is transmitted across the wire to avoid network inspection leaks.
-3. **Reveal & Analytics:**
-   - Host clicks **"Reveal Votes"**.
-   - Host transmits the revealed vote mapping across the broadcast channel.
-   - All client tables execute a synchronized 3D card flip.
-   - The analytics engine computes arithmetic mean, mode (majority choice), and divergence spread, rendering the distribution bar chart.
+    subgraph Phase2["Phase 2: Blind Estimation"]
+        VotingState(["VOTING State<br/>Cards displayed face-down<br/>apps/web/src/components/arena/PokerTable.tsx"])
+        LocalHold[("Client-Local Memory<br/>Numerical vote value hidden<br/>apps/web/src/hooks/useScrumSession.ts")]
+        WireToken["Broadcast Masked Token<br/>CAST_BLIND_VOTE: hasVoted=true<br/>Network Payload Masked"]
+    end
 
----
+    subgraph Phase3["Phase 3: Synchronized Reveal"]
+        RevealTrigger{{"Host Clicks Reveal?<br/>apps/web/src/components/arena/PokerTable.tsx"}}
+        RevealedState(["REVEALED State<br/>Synchronized 3D Card Flip<br/>apps/web/src/components/arena/PokerTable.tsx"])
+        AnalyticsCompute["Compute Consensus Metrics<br/>Average, Mode, & Spread<br/>apps/web/src/utils/analytics.ts"]
+        ConsensusGate{{"Consensus >= 70%?<br/>apps/web/src/utils/analytics.ts"}}
+        Celebration["Audio Chime & Confetti<br/>playConsensusSound & canvas-confetti<br/>apps/web/src/hooks/useScrumSession.ts"]
+    end
 
-## 3. Voice-to-Text Story Input Pipeline
+    IdleState --> HostInput
+    HostInput --> VotingState
+    AsyncQueue -.-> IdleState
 
-Speech recognition leverages the browser-native W3C `SpeechRecognition` API adapted from `kxnghans.github.io`:
+    VotingState --> LocalHold
+    LocalHold --> WireToken
+    WireToken --> RevealTrigger
 
-```mermaid
-flowchart LR
-    MicTrigger["User clicks Mic Button"] --> InitSpeech["Initialize Web Speech Engine\n(en-US, continuous, interim)"]
-    InitSpeech --> AudioStream["Audio Input Stream"]
-    AudioStream --> InterimResult["Interim Transcript\n(Live UI Preview)"]
-    AudioStream --> FinalResult["Final Transcript\n(Auto-Populate Title)"]
-    AudioStream --> SilenceDetect["Silence Watchdog\n(2000ms Inactivity)"]
-    SilenceDetect --> StopRecognition["Auto-Halt & Commit\n(playCardSelectSound)"]
-```
+    RevealTrigger -- Yes --> RevealedState
+    RevealedState --> AnalyticsCompute
+    AnalyticsCompute --> ConsensusGate
 
----
+    ConsensusGate -- Consensus Met --> Celebration
+    ConsensusGate -- Divergence --> RevealedState
 
-## 4. Asynchronous Story Queue Architecture
-
-The asynchronous queue enables continuous sprint sizing without interrupting current discussions:
-
-```mermaid
-flowchart LR
-    ParticipantInput["Any Participant\n(Voice or Text)"] --> QuickQueue["Click 'Queue' / Enter"]
-    QuickQueue --> BroadcastAdd["Broadcast ADD_QUEUE_ITEM"]
-    BroadcastAdd --> ActiveList["Drawer Queue List\n(#1, #2, #3...)"]
-    ActiveList --> HostNext["Host clicks 'Next Story'"]
-    HostNext --> ArchiveOld["Archive Current Story\n(with Consensus Points)"]
-    HostNext --> PopNew["Pop #1 into Active Sizing\n(Reset Cards to Voting)"]
+    RevealedState -->|Host Clicks Revote| VotingState
+    RevealedState -->|Host Clicks Next Story| IdleState
 ```
 
 ---
 
-## 5. Security & Boundary Guardrails
+## 3. Real-Time Blind Voting Sequence
 
-1. **Zero Persistence:**
-   - No database queries (`SELECT`/`INSERT`) are executed.
-   - No cookies, tokens, or PII are persisted on the server or edge worker.
-2. **True Blind Protection:**
-   - Voting values remain isolated on the client until the reveal broadcast, eliminating inspectable JSON payload leaks during active voting.
-3. **Input Sanitization:**
-   - Story titles and monikers are trimmed, bounded to safe lengths, and rendered using React DOM escaping to prevent XSS.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Host as Host Client (Scrum Master)
+    actor Voter as Voter Client (Teammate)
+    participant Channel as Ephemeral Channel (blindscrum:CODE)
+    
+    Note over Host, Voter: Round Begins in VOTING State
+    Host->>Channel: broadcast UPDATE_TITLE ("OAuth2 Migration")
+    Channel->>Voter: deliver UPDATE_TITLE ("OAuth2 Migration")
+    
+    Note over Voter: Voter Selects Fibonacci Card (e.g. 5 pts)
+    Voter->>Voter: Store '5' in local memory (mySecretVoteRef)
+    Voter->>Channel: broadcast CAST_BLIND_VOTE { participantId, hasVoted: true }
+    Channel->>Host: deliver CAST_BLIND_VOTE (shows card face-down with glow)
+    
+    Note over Host: All Participants Have Voted
+    Host->>Channel: broadcast REVEAL_VOTES { votes: { host: 5, voter: 5 } }
+    Channel->>Voter: deliver REVEAL_VOTES
+    
+    Note over Host, Voter: Synchronized 3D Card Flip & Analytics Calculation
+    Voter->>Voter: Render Bar Chart, Average (5.0), and Confetti
+    Host->>Host: Render Bar Chart, Average (5.0), and Confetti
+```
+
+---
+
+## 4. Voice-to-Text Input Pipeline
+
+```mermaid
+flowchart LR
+    MicClick(["User Taps Mic Button<br/>apps/web/src/components/arena/StoryInputBar.tsx"]) --> SupportCheck{{"SpeechRecognition Supported?<br/>apps/web/src/hooks/useVoiceSearch.ts"}}
+    
+    SupportCheck -- Yes --> StartEngine[["Initialize Web Speech API<br/>Continuous & Interim Active<br/>apps/web/src/hooks/useVoiceSearch.ts"]]
+    SupportCheck -- No --> ToastFallback["Display Toast Alert<br/>Browser unsupported fallback<br/>sonner"]
+    
+    StartEngine --> StreamAudio["Audio Waveform Stream<br/>Visual pulsating red indicator<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
+    StreamAudio --> InterimProcess["Stream Interim Transcript<br/>Instant input field preview<br/>apps/web/src/hooks/useVoiceSearch.ts"]
+    StreamAudio --> SilenceWatchdog[["Silence Watchdog Active<br/>2000ms inactivity countdown<br/>apps/web/src/hooks/useVoiceSearch.ts"]]
+    
+    SilenceWatchdog --> SilenceTrigger{{"2s Silence Detected?<br/>apps/web/src/hooks/useVoiceSearch.ts"}}
+    SilenceTrigger -- Yes --> AutoStop["Auto-Stop Recognition<br/>Commit Final Title<br/>apps/web/src/components/arena/StoryInputBar.tsx"]
+    SilenceTrigger -- No --> StreamAudio
+```
+
+---
+
+## 5. Asynchronous Story Queue State Transitions
+
+```mermaid
+flowchart LR
+    subgraph QueueInput["Queue Addition (Anytime)"]
+        UserAction(["Participant or Host Input<br/>Text or Spoken Moniker<br/>apps/web/src/components/queue/StoryQueueDrawer.tsx"]) --> AddEvent["Dispatch ADD_QUEUE_ITEM<br/>UUID, Title, & Timestamp<br/>apps/web/src/types/scrum.ts"]
+        AddEvent --> QueueStore[("In-Memory Queue Buffer<br/>Ordered FIFO List<br/>apps/web/src/hooks/useScrumSession.ts")]
+    end
+
+    subgraph QueueReorder["Queue Management"]
+        QueueStore --> MoveUp["Reorder Move Up<br/>apps/web/src/components/queue/StoryQueueDrawer.tsx"]
+        QueueStore --> RemoveItem["Delete Story Item<br/>apps/web/src/components/queue/StoryQueueDrawer.tsx"]
+    end
+
+    subgraph NextTransition["Sequential Story Transition"]
+        HostNext(["Host Clicks 'Next Story'<br/>apps/web/src/components/arena/PokerTable.tsx"]) --> ArchivePrev["Archive Active Story<br/>Append to Completed Log<br/>apps/web/src/types/scrum.ts"]
+        ArchivePrev --> PopQueue["Pop First Queued Item<br/>Set as Active Story Title<br/>apps/web/src/hooks/useScrumSession.ts"]
+        PopQueue --> ResetRound["Reset Round to VOTING<br/>Clear Cards & Analytics<br/>apps/web/src/hooks/useScrumSession.ts"]
+    end
+```
