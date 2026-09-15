@@ -13,6 +13,7 @@ import {
   type RefObject,
 } from "react";
 import { toast } from "sonner";
+import { MAX_STORY_TITLE_LENGTH } from "@/types/scrum";
 
 export interface UseVoiceSearchOptions {
   onTranscript: (transcript: string) => void;
@@ -100,7 +101,9 @@ export const useVoiceSearch = ({
         }
       }
 
-      const combined = (finalTranscript + interimTranscript).trim();
+      const combined = (finalTranscript + interimTranscript)
+        .trim()
+        .slice(0, MAX_STORY_TITLE_LENGTH);
       if (combined) {
         onTranscript(combined);
       }

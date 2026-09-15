@@ -271,87 +271,100 @@ export function PokerTable({
   }, [activePickerTargetId]);
 
   return (
-    <div className="w-full max-w-5xl mx-auto my-8 px-4">
+    <div className="w-full max-w-5xl mx-auto my-4 sm:my-6 px-4">
       {/* Table surface */}
-      <div className="relative rounded-3xl p-6 sm:p-10 bg-gradient-to-b from-slate-100/90 to-slate-200/90 dark:from-slate-900/90 dark:to-slate-950/90 border border-slate-300/80 dark:border-slate-800 shadow-2xl overflow-hidden">
+      <div className="relative rounded-3xl p-4 sm:p-6 md:p-8 bg-gradient-to-b from-slate-100/90 to-slate-200/90 dark:from-slate-900/90 dark:to-slate-950/90 border border-slate-300/80 dark:border-slate-800 shadow-2xl overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
 
-        {/* Center status & host actions */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center py-4 mb-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 shadow-sm">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isRevealed
-                  ? "bg-emerald-500"
-                  : votedCount === totalCount && totalCount > 0
-                    ? "bg-emerald-500 animate-ping"
-                    : "bg-amber-500 animate-pulse"
-              }`}
-            />
-            <span>
-              {isRevealed
-                ? "Votes revealed"
-                : votedCount === totalCount && totalCount > 0
-                  ? "All teammates have voted!"
-                  : `${votedCount} of ${totalCount} teammates voted`}
-            </span>
-          </div>
+        {/* Center status & host actions: compact, cohesive bar */}
+        <div className="relative z-10 flex flex-col items-center justify-center text-center mb-4 sm:mb-6">
+          {isRevealed ? (
+            /* Post-reveal compact action bar: Status pill & action buttons aligned side-by-side */
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                <span>Votes revealed</span>
+              </div>
 
-          {/* Pending voter roster */}
-          {!isRevealed && pendingParticipants.length > 0 && totalCount > 1 && (
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3 max-w-md mx-auto">
-              Waiting on:{" "}
-              <span className="font-semibold text-amber-600 dark:text-amber-400">
-                {pendingParticipants
-                  .map((p) => (p.id === currentUserId ? "You" : p.name))
-                  .join(", ")}
-              </span>
-            </p>
-          )}
-
-          {/* Host actions */}
-          {isHost ? (
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-1">
-              {!isRevealed ? (
-                <button
-                  type="button"
-                  onClick={onRevealVotes}
-                  disabled={votedCount === 0}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/50"
-                >
-                  <Eye className="w-4 h-4" />
-                  Reveal Votes ({votedCount}/{totalCount})
-                </button>
-              ) : (
-                <>
+              {isHost ? (
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={onResetRound}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold border border-slate-300 dark:border-slate-700 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-300 dark:border-slate-700 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                   >
-                    <RotateCcw className="w-4 h-4" />
-                    Revote
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Revote</span>
                   </button>
 
                   {hasQueuedStories && (
                     <button
                       type="button"
                       onClick={onNextStory}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-lg shadow-emerald-500/25 transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/50"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/25 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                     >
-                      <ArrowRight className="w-4 h-4" />
-                      Next Story
+                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Next Project</span>
                     </button>
                   )}
-                </>
+                </div>
+              ) : (
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Waiting for host to restart or move to next project.
+                </span>
               )}
             </div>
           ) : (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {isRevealed
-                ? "Waiting for the host to restart or move to the next ticket."
-                : "Waiting for the host to flip cards..."}
-            </p>
+            /* Voting in progress bar */
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    votedCount === totalCount && totalCount > 0
+                      ? "bg-emerald-500 animate-ping"
+                      : "bg-amber-500 animate-pulse"
+                  }`}
+                />
+                <span>
+                  {votedCount === totalCount && totalCount > 0
+                    ? "All teammates have voted!"
+                    : `${votedCount} of ${totalCount} teammates voted`}
+                </span>
+              </div>
+
+              {/* Pending voter roster */}
+              {pendingParticipants.length > 0 && totalCount > 1 && (
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  Waiting on:{" "}
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                    {pendingParticipants
+                      .map((p) => (p.id === currentUserId ? "You" : p.name))
+                      .join(", ")}
+                  </span>
+                </p>
+              )}
+
+              {/* Host reveal action */}
+              {isHost ? (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={onRevealVotes}
+                    disabled={votedCount === 0}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>
+                      Reveal Votes ({votedCount}/{totalCount})
+                    </span>
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Waiting for host to flip cards...
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -514,7 +527,7 @@ export function PokerTable({
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20">
                             <Clock className="w-2.5 h-2.5 animate-spin text-amber-500" />
-                            <span>Thinking...</span>
+                            <span>Voting...</span>
                           </span>
                         )}
                       </div>
@@ -526,8 +539,8 @@ export function PokerTable({
                         isConsensusWinner
                           ? "border-2 border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/20"
                           : isTiedVote
-                          ? "border-2 border-amber-500/80 shadow-amber-500/20 ring-2 ring-amber-500/20"
-                          : "border-2 border-indigo-500/70 dark:border-indigo-500/50 text-indigo-600 dark:text-indigo-400"
+                            ? "border-2 border-amber-500/80 shadow-amber-500/20 ring-2 ring-amber-500/20"
+                            : "border-2 border-indigo-500/70 dark:border-indigo-500/50 text-indigo-600 dark:text-indigo-400"
                       }`}
                     >
                       {/* Top Back: Anchored Participant Avatar & Alias Header */}

@@ -87,7 +87,8 @@ export function calculateVoteAnalytics(
       : 0;
 
   // Has consensus only if a single clear mode, >= 70% agreement, and at least 2 voters
-  const hasConsensus = !isTie && modePercentage >= 70 && activeVotes.length >= 2;
+  const hasConsensus =
+    !isTie && modePercentage >= 70 && activeVotes.length >= 2;
 
   // Distribution across known Fibonacci cards
   const distribution: VoteDistributionItem[] = [];

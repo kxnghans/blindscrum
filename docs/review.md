@@ -28,9 +28,9 @@ BlindScrum has a simple security model because it has no database. It does not s
 
 - **Risk:** Malicious users paste `<script>` or HTML tags into story titles or names.
 - **Defense:**
-  - Story titles are limited to 140 characters and rendered via standard React JSX, which automatically escapes HTML entities.
-  - Monikers are capped at 28 characters.
-  - Room codes are filtered with `[^A-Z0-9-]`.
+  - Story titles are strictly clamped to 300 characters (`MAX_STORY_TITLE_LENGTH = 300`) with real-time UI counters and rendered via standard React JSX, which automatically escapes HTML entities.
+  - Monikers are capped at 28 characters (`MAX_PERSONA_NAME_LENGTH = 28`).
+  - Room codes are capped at 16 characters (`MAX_ROOM_CODE_LENGTH = 16`) and filtered via `/[^A-Z0-9-]/g`.
 
 ### 2.3 Accidental Secret Leaks
 
@@ -44,6 +44,8 @@ BlindScrum has a simple security model because it has no database. It does not s
 - **Risk:** A script spams peer connections with events to crash other players' browsers.
 - **Defense:**
   - WebRTC DataChannels transmit peer-to-peer with lightweight JSON payloads. Event types and bounds are validated upon receipt, ignoring malformed payloads.
+  - Reaction events (`THROW_REACTION`) are rate-limited per participant (250ms cooldown) and auto-evict from local memory after 3000ms.
+  - The asynchronous backlog queue enforces an in-memory ceiling (maximum 50 items) to prevent memory exhaustion and wire congestion.
 
 ### 2.5 Microphone Privacy
 

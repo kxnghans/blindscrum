@@ -49,6 +49,7 @@ BlindScrum deploys on **Vercel** with native zero-config support for Next.js 16 
 - **Build Command:** `pnpm build` (executes `turbo run build`)
 - **Output Directory:** Next.js App Router default (`apps/web/.next`)
 - **Node.js Runtime:** `>= 18.x`
+- **Branch Watch Filter (`vercel.json`):** Configured to only watch and trigger automated deployments on pushes to `origin/main`. Non-main branches (feature, chore, qa) are skipped via `git.deploymentEnabled: { "main": true, "*": false }` and `ignoreCommand`.
 
 ### 3.2 Deployment Commands
 
@@ -72,9 +73,9 @@ Because all estimation rooms, queue buffers, and votes live strictly in client m
    - During voting, clients only broadcast `{ participantId, hasVoted: true }`.
    - The selected point number stays in the voter's browser memory until the host triggers a reveal. Inspecting WebRTC packet logs will not leak estimates before the reveal.
 2. **Input Bounds:**
-   - Story titles are capped at 140 characters.
-   - Monikers are capped at 28 characters.
-   - Room codes are filtered to alphanumeric and hyphens (`[A-Z0-9-]`).
+   - Story titles are capped at 300 characters (`MAX_STORY_TITLE_LENGTH = 300`).
+   - Monikers are capped at 28 characters (`MAX_PERSONA_NAME_LENGTH = 28`).
+   - Room codes are capped at 16 characters (`MAX_ROOM_CODE_LENGTH = 16`) and filtered to alphanumeric characters and hyphens (`[A-Z0-9-]`).
 3. **Zero Secret Keys:**
    - There are no database credentials, service role keys, or API tokens anywhere in the repository.
    - The application runs 100% autonomously in the browser with no third-party vendor lock-in.

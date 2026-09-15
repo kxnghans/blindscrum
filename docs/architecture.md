@@ -215,4 +215,3 @@ flowchart LR
         ElectNewHost --> SyncNewcomers["Answer New SYNC_REQUEST<br/>Serve canonical snapshot<br/>apps/web/src/hooks/useScrumSession.ts"]
     end
 ```
-

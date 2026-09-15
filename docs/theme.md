@@ -58,7 +58,7 @@ Cards simulate physical playing cards using CSS 3D transforms:
 
 Each player sits at the table as an interactive playing card:
 
-- **Voting Face (Front):** Displays role indicator (host crown), participant avatar with dynamic ring (amber pulse for thinking, emerald ring with check for voted), bold alias, and live status pill.
+- **Voting Face (Front):** Displays role indicator (host crown), participant avatar with dynamic ring (amber pulse for voting, emerald ring with check for voted), bold alias, and live status pill ("Voting..." with animated spinning clock, or "Voted" with emerald checkmark).
 - **Revealed Face (Back):** 3D flips 180 degrees to show the numeric point score with the avatar anchored at the top identity pill and a bottom summary badge (★ Consensus, ★ Majority, Lowest, or Highest).
 - **Consensus Glow:** Winning consensus picks gain an emerald border with elevated glow (`border-emerald-500 shadow-emerald-500/20`).
 
@@ -101,3 +101,18 @@ Reactions use lightweight CSS keyframe animations designed for playful physical 
 - **Gas Mist (`.animate-gas-mist`):** 2600ms swelling gradient mist coupled with drifting `Zzz` text upward.
 - **Lightning Zap (`.animate-zap-flash`):** 1800ms high-voltage flash accompanied by electric vibration (`.animate-card-shake`).
 - **Cheers Celebration (`.animate-cheers-burst`):** 2500ms confetti explosion with bouncing party emojis.
+
+---
+
+## 8. Smart Input Limits & Progressive Badges
+
+Input wells render tactile monospace character counters that progressively transition through semantic alert colors as content approaches capacity:
+
+- **Standard State ($< 250$ chars):** Muted slate token (`text-slate-400 dark:text-slate-500 font-mono text-xs`) indicating relaxed remaining headroom.
+- **Approaching Limit Warning ($250 \le \text{chars} < 300$):** High-contrast amber token (`text-amber-500 font-semibold`) alerting users of pending truncation.
+- **Hard Limit Reached ($300$ chars):** Vivid rose danger token (`text-rose-500 font-bold`) indicating the field boundary is reached.
+- **Token Application:**
+  - **Story Pipeline:** Active project sizing input and inline quick queue input display `X/300`.
+  - **Queue Drawer:** Backlog addition drawer displays `X/300`.
+  - **User Profile Modal:** Moniker input displays `X/28` (transitioning to amber at 24 chars).
+  - **Landing Page:** Room code input enforces `maxLength={16}` with strict uppercase transformation.

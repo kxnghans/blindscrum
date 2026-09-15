@@ -25,9 +25,8 @@ describe("persona utilities", () => {
   });
 
   it("should render all archetypes and color palettes including white correctly", async () => {
-    const { ARCHETYPES, COLOR_PALETTES, renderAvatarSvg } = await import(
-      "./persona"
-    );
+    const { ARCHETYPES, COLOR_PALETTES, renderAvatarSvg } =
+      await import("./persona");
     expect(ARCHETYPES.length).toBe(10);
     expect(COLOR_PALETTES.length).toBe(9);
 

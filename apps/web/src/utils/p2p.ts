@@ -20,7 +20,10 @@ export interface P2PSession {
   broadcast: (event: ScrumBroadcastEvent) => Promise<void>;
   sendToPeer: (peerId: string, event: ScrumBroadcastEvent) => Promise<void>;
   broadcastPersona: (participant: Participant) => Promise<void>;
-  sendPersonaToPeer: (peerId: string, participant: Participant) => Promise<void>;
+  sendPersonaToPeer: (
+    peerId: string,
+    participant: Participant,
+  ) => Promise<void>;
   destroy: () => Promise<void>;
 }
 
@@ -42,7 +45,10 @@ export function createP2PSession({
   }
 
   // Sanitize room code for topic identification
-  const normalizedRoom = roomCode.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  const normalizedRoom = roomCode
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, "");
   if (!normalizedRoom) {
     return null;
   }
@@ -58,7 +64,7 @@ export function createP2PSession({
         ],
       },
     },
-    normalizedRoom
+    normalizedRoom,
   );
 
   // Define string-based actions to ensure reliable JSON serialization
@@ -128,7 +134,9 @@ export function createP2PSession({
     },
     sendPersonaToPeer: async (peerId: string, participant: Participant) => {
       try {
-        await personaAction.send(JSON.stringify(participant), { target: peerId });
+        await personaAction.send(JSON.stringify(participant), {
+          target: peerId,
+        });
       } catch {
         // Suppress transient disconnect errors
       }

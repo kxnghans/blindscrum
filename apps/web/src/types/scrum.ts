@@ -7,6 +7,11 @@
 export const FIBONACCI_CARDS = [1, 2, 3, 5, 8, 13, 20] as const;
 export type FibonacciValue = (typeof FIBONACCI_CARDS)[number];
 
+// Smart character limits across application input boundaries
+export const MAX_STORY_TITLE_LENGTH = 300;
+export const MAX_PERSONA_NAME_LENGTH = 28;
+export const MAX_ROOM_CODE_LENGTH = 16;
+
 export type RoundStatus = "IDLE" | "VOTING" | "REVEALED";
 
 export type ParticipantRole = "host" | "voter";

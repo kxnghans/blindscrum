@@ -37,15 +37,15 @@ BlindScrum keeps things minimal. You open the site, send a link, read or type th
 
 ### 4.1 Ephemeral Rooms & Link Sharing
 
-- Room codes follow a simple pattern (like `SCRUM-492` or `BLND-92`).
+- Room codes follow a simple pattern (like `SCRUM-492` or `BLND-92`), capped at 16 characters (`MAX_ROOM_CODE_LENGTH = 16`).
 - Links support `/room/[code]` or `/?room=CODE` auto-joining.
 - Header includes a one-click copy button with toast feedback.
 
 ### 4.2 Personas, Avatars & Presets
 
-- Each player gets a two-word agile name (like _Velocity Falcon_ or _Agile Otter_).
+- Each player gets a two-word agile name (like _Velocity Falcon_ or _Agile Otter_), capped at 28 characters (`MAX_PERSONA_NAME_LENGTH = 28`).
 - Avatars are generated as inline SVGs based on a string hash. No external image requests.
-- Players can edit their name, choose from a 10-character preset gallery, or click randomize in the profile modal.
+- Players can edit their name with live character count feedback, choose from a 10-character preset gallery, or click randomize in the profile modal.
 
 ### 4.3 Voice Input
 
@@ -56,16 +56,16 @@ BlindScrum keeps things minimal. You open the site, send a link, read or type th
 ### 4.4 Story Pipeline & Queue
 
 - In-flow arena pipeline shows the active ticket ("Now Sizing"), the "Up Next" preview card, and the remaining backlog horizon.
-- Active ticket field sits inside a tactile neumorphic inset well with an embedded microphone on the right flank for speech-to-text dictation.
-- Anyone in the room can add tickets directly through an inline queue input well with an embedded circular `+` button.
-- Slide-over queue drawer allows full backlog reordering, deletion, and review of completed story estimates, accessible via the header `Queue (N)` button or pipeline `View Backlog →` link.
+- Active ticket field sits inside a tactile neumorphic inset well with an embedded microphone on the right flank for speech-to-text dictation. Titles are clamped to 300 characters (`MAX_STORY_TITLE_LENGTH = 300`) with live progressive counter badges (amber at 250, bold rose at 300) and responsive multi-line wrapping (`line-clamp-3`).
+- Anyone in the room can add tickets directly through an inline queue input well with an embedded circular `+` button, governed by the same 300-character boundary.
+- Slide-over queue drawer allows full backlog reordering, deletion, and review of completed story estimates, accessible via the arena's `View Queue (N) →` link or "Up Next" preview card.
 - Host can click "Next Story" to pop the first queued item into the arena, reset cards, and save the previous estimate to the completed log.
 
 ### 4.5 Secret Voting & Avatar-on-Card 3D Table
 
 - Standard numeric Fibonacci cards: `1, 2, 3, 5, 8, 13, 20`.
 - During voting, the app only broadcasts `{ hasVoted: true }`. Card numbers remain on the voter's device until the host clicks reveal.
-- Each participant sits directly as a card. The card front hosts the participant avatar with dynamic status ring, alias, and live status pill ("Thinking..." or "Voted").
+- Each participant sits directly as a card. The card front hosts the participant avatar with dynamic status ring, alias, and live status pill ("Voting..." or "Voted").
 - On reveal, cards 3D flip 180 degrees to show the numeric point score with the avatar anchored at the top identity badge and bottom consensus/majority summary pills. Winning consensus picks gain an elevated emerald highlight.
 
 ### 4.6 Analytics & Markdown Export
@@ -90,10 +90,11 @@ BlindScrum keeps things minimal. You open the site, send a link, read or type th
 
 ## 5. Technical Constraints
 
-| Dimension         | Target                                                                                   |
-| :---------------- | :--------------------------------------------------------------------------------------- |
-| **Storage**       | Zero database storage. Rooms live in memory and direct WebRTC DataChannels.              |
-| **Realtime**      | WebRTC DataChannel packet delivery in under 50ms peer-to-peer.                            |
-| **Accessibility** | Full keyboard support on card buttons, aria-pressed states, and 4.5:1 contrast.          |
-| **Deployment**    | Vercel (Native Next.js 16 App Router deployment).                                        |
-| **Assets**        | Zero external audio or image dependencies. Sounds and SVGs are generated in the browser. |
+| Dimension         | Target                                                                                                                |
+| :---------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| **Storage**       | Zero database storage. Rooms live in memory and direct WebRTC DataChannels.                                           |
+| **Realtime**      | WebRTC DataChannel packet delivery in under 50ms peer-to-peer.                                                        |
+| **Input Bounds**  | 300 chars (story/project title), 28 chars (persona moniker), 16 chars (room code), 50 items (queue cap).              |
+| **Accessibility** | Full keyboard support on card buttons, aria-pressed states, and 4.5:1 contrast.                                       |
+| **Deployment**    | Vercel (Native Next.js 16 App Router deployment, strictly filtered to `origin/main` branch pushes via `vercel.json`). |
+| **Assets**        | Zero external audio or image dependencies. Sounds and SVGs are generated in the browser.                              |

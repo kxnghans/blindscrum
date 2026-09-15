@@ -79,20 +79,19 @@ export function AnalyticsPanel({
   };
 
   return (
-    <section className="w-full max-w-5xl mx-auto my-8 px-4 animate-in fade-in-50 duration-300">
-      <div className="rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
-        {/* Header with export */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800/80">
-          <div>
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-indigo-500" />
-              <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-                Vote Results
-              </h3>
-            </div>
-            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-0.5 truncate max-w-md">
-              &ldquo;{storyTitle}&rdquo;
-            </p>
+    <section className="w-full max-w-5xl mx-auto my-4 sm:my-6 px-4 animate-in fade-in-50 duration-300">
+      <div className="rounded-3xl p-5 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+        {/* Header with vote tally and export */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center gap-2.5">
+            <BarChart3 className="w-5 h-5 text-indigo-500" />
+            <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
+              Vote Results
+            </h3>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
+              {analytics.totalVotes}{" "}
+              {analytics.totalVotes === 1 ? "vote" : "votes"}
+            </span>
           </div>
 
           <button
@@ -111,15 +110,16 @@ export function AnalyticsPanel({
 
         {/* Consensus, split tie, or divergence callout */}
         {isTie ? (
-          <div className="my-5 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
+          <div className="my-4 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
             <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             <span>
-              Split decision between <strong>{modes.join(" & ")} points</strong> (
-              {modeCount} votes each). Talk through differing assumptions before revoting.
+              Split decision between <strong>{modes.join(" & ")} points</strong>{" "}
+              ({modeCount} votes each). Talk through differing assumptions
+              before revoting.
             </span>
           </div>
         ) : hasConsensus ? (
-          <div className="my-5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-medium">
+          <div className="my-4 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-medium">
             <Award className="w-5 h-5 text-emerald-500 shrink-0" />
             <span>
               The team agreed on <strong>{mode} points</strong> (
@@ -127,7 +127,7 @@ export function AnalyticsPanel({
             </span>
           </div>
         ) : spread !== null && spread >= 5 ? (
-          <div className="my-5 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
+          <div className="my-4 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
             <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             <span>
               Wide spread ({min} to {max} points). Talk through the outliers
@@ -136,8 +136,8 @@ export function AnalyticsPanel({
           </div>
         ) : null}
 
-        {/* Summary metric cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+        {/* Summary metric cards: clean, bold, without redundant subtitles */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 my-5">
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <Award className="w-5 h-5" />
@@ -147,20 +147,15 @@ export function AnalyticsPanel({
                 {isTie
                   ? "Tied Result"
                   : hasConsensus
-                  ? "Consensus Pick"
-                  : "Majority Pick"}
+                    ? "Consensus Pick"
+                    : "Majority Pick"}
               </p>
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">
                 {isTie
                   ? `${modes.join(" & ")} pts`
                   : mode !== null
-                  ? `${mode} pts`
-                  : "N/A"}
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {isTie
-                  ? `${modeCount} votes each`
-                  : `${modeCount} votes (${modePercentage}%)`}
+                    ? `${mode} pts`
+                    : "N/A"}
               </p>
             </div>
           </div>
@@ -174,10 +169,7 @@ export function AnalyticsPanel({
                 Average
               </p>
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">
-                {average !== null ? `${average}` : "N/A"}
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Across {analytics.totalVotes} responses
+                {average !== null ? `${average} pts` : "N/A"}
               </p>
             </div>
           </div>
@@ -191,12 +183,11 @@ export function AnalyticsPanel({
                 Spread
               </p>
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">
-                {min !== null && max !== null ? `${min} – ${max}` : "N/A"}
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {spread !== null
-                  ? `Difference of ${spread} pts`
-                  : "Single vote"}
+                {spread === 0
+                  ? `Uniform (${min} pts)`
+                  : min !== null && max !== null
+                    ? `Low: ${min} | High: ${max}`
+                    : "N/A"}
               </p>
             </div>
           </div>

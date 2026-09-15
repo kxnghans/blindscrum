@@ -17,6 +17,7 @@ import {
 } from "@/utils/roomCode";
 import { generateRandomScrumAlias, generateScrumAvatar } from "@/utils/persona";
 import type { Participant } from "@/types/scrum";
+import { MAX_ROOM_CODE_LENGTH } from "@/types/scrum";
 
 function LandingContent() {
   const router = useRouter();
@@ -115,7 +116,8 @@ function LandingContent() {
             </div>
             <h2 className="text-xl font-black mb-1.5">Start a Room</h2>
             <p className="text-xs text-indigo-100/85 mb-6 leading-relaxed">
-              Get a link for your team. You manage the active story and flip the cards.
+              Get a link for your team. You manage the active story and flip the
+              cards.
             </p>
           </div>
 
@@ -143,6 +145,7 @@ function LandingContent() {
           <form onSubmit={handleJoinRoom} className="space-y-3">
             <input
               type="text"
+              maxLength={MAX_ROOM_CODE_LENGTH}
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value.toUpperCase())}
               placeholder="e.g. SCRUM-492"

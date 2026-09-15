@@ -85,8 +85,6 @@ export default function RoomPage({ params }: RoomPageProps) {
       <RoomHeader
         roomCode={roomCode}
         currentUser={currentUser}
-        queueCount={queue.length}
-        onOpenQueue={() => setIsQueueOpen(true)}
         onUpdateUser={actions.updateUserProfile}
         isConnected={isConnected}
       />

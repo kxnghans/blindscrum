@@ -17,6 +17,7 @@ import {
   type AvatarArchetypeId,
 } from "@/utils/persona";
 import type { Participant } from "@/types/scrum";
+import { MAX_PERSONA_NAME_LENGTH } from "@/types/scrum";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -297,17 +298,33 @@ export function UserProfileModal({
 
           {/* Step 3: Display Name & One-Click Randomizer */}
           <div>
-            <label
-              htmlFor="persona-name"
-              className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
-            >
-              3. Display Name
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="persona-name"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+              >
+                3. Display Name
+              </label>
+              {name.length > 0 && (
+                <span
+                  className={`text-[10px] font-mono tracking-tight select-none transition-colors ${
+                    name.length >= MAX_PERSONA_NAME_LENGTH
+                      ? "text-rose-600 dark:text-rose-400 font-bold"
+                      : name.length >= 24
+                        ? "text-amber-600 dark:text-amber-400 font-semibold"
+                        : "text-slate-400 dark:text-slate-500"
+                  }`}
+                  title={`${name.length} of ${MAX_PERSONA_NAME_LENGTH} characters`}
+                >
+                  {name.length}/{MAX_PERSONA_NAME_LENGTH}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <input
                 id="persona-name"
                 type="text"
-                maxLength={28}
+                maxLength={MAX_PERSONA_NAME_LENGTH}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Velocity Falcon"

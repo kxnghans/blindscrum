@@ -18,6 +18,8 @@ import {
   type ScrumRoomState,
   type TableReactionType,
   type TableReactionPayload,
+  MAX_STORY_TITLE_LENGTH,
+  MAX_PERSONA_NAME_LENGTH,
 } from "@/types/scrum";
 import { generateRandomScrumAlias, generateScrumAvatar } from "@/utils/persona";
 import { calculateVoteAnalytics } from "@/utils/analytics";
@@ -104,9 +106,21 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   const lastReactionTimeRef = useRef<number>(0);
 
   // Ref for latest state to respond to state-sync requests from new peers
-  const stateRef = useRef({ storyTitle, status, queue, completedStories, participants });
+  const stateRef = useRef({
+    storyTitle,
+    status,
+    queue,
+    completedStories,
+    participants,
+  });
   useEffect(() => {
-    stateRef.current = { storyTitle, status, queue, completedStories, participants };
+    stateRef.current = {
+      storyTitle,
+      status,
+      queue,
+      completedStories,
+      participants,
+    };
   }, [storyTitle, status, queue, completedStories, participants]);
 
   const currentUserRef = useRef(currentUser);
@@ -164,24 +178,21 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   }, [status, revealedVotes]);
 
   // Broadcast dispatch helper (dispatches to both P2P WebRTC data channels and local BroadcastChannel)
-  const broadcast = useCallback(
-    (event: ScrumBroadcastEvent) => {
-      // Local BroadcastChannel for multi-tab testing on the same browser
-      if (localBroadcastRef.current) {
-        try {
-          localBroadcastRef.current.postMessage(event);
-        } catch {
-          // Channel closed
-        }
+  const broadcast = useCallback((event: ScrumBroadcastEvent) => {
+    // Local BroadcastChannel for multi-tab testing on the same browser
+    if (localBroadcastRef.current) {
+      try {
+        localBroadcastRef.current.postMessage(event);
+      } catch {
+        // Channel closed
       }
+    }
 
-      // WebRTC P2P DataChannel broadcast
-      if (p2pSessionRef.current) {
-        p2pSessionRef.current.broadcast(event);
-      }
-    },
-    [],
-  );
+    // WebRTC P2P DataChannel broadcast
+    if (p2pSessionRef.current) {
+      p2pSessionRef.current.broadcast(event);
+    }
+  }, []);
 
   // Incoming event router
   const handleIncomingEvent = useCallback(
@@ -193,7 +204,9 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
         case "CAST_BLIND_VOTE":
           setParticipants((prev) => {
-            const exists = prev.some((p) => p.id === event.payload.participantId);
+            const exists = prev.some(
+              (p) => p.id === event.payload.participantId,
+            );
             if (!exists) {
               return [
                 ...prev,
@@ -278,14 +291,16 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
             }
             const sanitizedItem = {
               ...event.payload.item,
-              title: event.payload.item.title.slice(0, 140),
+              title: event.payload.item.title.slice(0, MAX_STORY_TITLE_LENGTH),
             };
             return [...prev, sanitizedItem];
           });
           break;
 
         case "REMOVE_QUEUE_ITEM":
-          setQueue((prev) => prev.filter((item) => item.id !== event.payload.id));
+          setQueue((prev) =>
+            prev.filter((item) => item.id !== event.payload.id),
+          );
           break;
 
         case "REORDER_QUEUE":
@@ -340,7 +355,10 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
           setStatus(event.payload.status);
           setQueue(event.payload.queue);
           setCompletedStories(event.payload.completedStories);
-          if (event.payload.participants && event.payload.participants.length > 0) {
+          if (
+            event.payload.participants &&
+            event.payload.participants.length > 0
+          ) {
             setParticipants((prev) => {
               const map = new Map<string, Participant>();
               map.set(currentUserRef.current.id, currentUserRef.current);
@@ -381,10 +399,15 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
               const exists = prev.some((p) => p.id === peer.id);
               if (!exists) {
                 // Reply with our own identity so the new peer immediately learns about us
-                broadcast({ type: "PEER_ANNOUNCE", payload: currentUserRef.current });
+                broadcast({
+                  type: "PEER_ANNOUNCE",
+                  payload: currentUserRef.current,
+                });
                 return [...prev, peer];
               }
-              return prev.map((p) => (p.id === peer.id ? { ...p, ...peer } : p));
+              return prev.map((p) =>
+                p.id === peer.id ? { ...p, ...peer } : p,
+              );
             });
           }
           break;
@@ -519,7 +542,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   // User Actions
   const updateStoryTitle = useCallback(
     (newTitle: string) => {
-      const sanitized = newTitle.slice(0, 140);
+      const sanitized = newTitle.slice(0, MAX_STORY_TITLE_LENGTH);
       setStoryTitleState(sanitized);
       broadcast({ type: "UPDATE_TITLE", payload: { title: sanitized } });
     },
@@ -600,7 +623,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       if (!title.trim()) return;
       const newItem: StoryQueueItem = {
         id: `queue_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        title: title.trim().slice(0, 140),
+        title: title.trim().slice(0, MAX_STORY_TITLE_LENGTH),
         addedBy: currentUser.name,
         addedAt: Date.now(),
       };
@@ -668,7 +691,8 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
 
   const updateUserProfile = useCallback(
     (newName: string, newAvatar?: string) => {
-      const cleanName = newName.trim().slice(0, 28) || "Anonymous";
+      const cleanName =
+        newName.trim().slice(0, MAX_PERSONA_NAME_LENGTH) || "Anonymous";
       const cleanAvatar = newAvatar || generateScrumAvatar(cleanName);
       const updated: Participant = {
         ...currentUser,

@@ -17,7 +17,11 @@ import {
   Play,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { StoryQueueItem, CompletedStory } from "@/types/scrum";
+import {
+  type StoryQueueItem,
+  type CompletedStory,
+  MAX_STORY_TITLE_LENGTH,
+} from "@/types/scrum";
 
 interface StoryQueueDrawerProps {
   isOpen: boolean;
@@ -50,12 +54,12 @@ export function StoryQueueDrawer({
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) {
-      toast.error("Type a story title.");
+      toast.error("Type a project title.");
       return;
     }
     onAddToQueue(newTitle.trim());
     setNewTitle("");
-    toast.success("Queued story.");
+    toast.success("Queued project.");
   };
 
   const handleMoveUp = (index: number) => {
@@ -78,7 +82,7 @@ export function StoryQueueDrawer({
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-indigo-500" />
             <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-base">
-              Story Queue
+              Project Queue
             </h3>
           </div>
 
@@ -136,18 +140,34 @@ export function StoryQueueDrawer({
             onSubmit={handleAdd}
             className="p-4 border-b border-slate-100 dark:border-slate-800/60"
           >
-            <label
-              htmlFor="queue-title-input"
-              className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5"
-            >
-              Queue a Story
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="queue-title-input"
+                className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
+              >
+                Queue a Project
+              </label>
+              {newTitle.length > 0 && (
+                <span
+                  className={`text-[10px] font-mono tracking-tight select-none transition-colors ${
+                    newTitle.length >= MAX_STORY_TITLE_LENGTH
+                      ? "text-rose-600 dark:text-rose-400 font-bold"
+                      : newTitle.length >= 250
+                        ? "text-amber-600 dark:text-amber-400 font-semibold"
+                        : "text-slate-400 dark:text-slate-500"
+                  }`}
+                  title={`${newTitle.length} of ${MAX_STORY_TITLE_LENGTH} characters`}
+                >
+                  {newTitle.length}/{MAX_STORY_TITLE_LENGTH}
+                </span>
+              )}
+            </div>
             <div className="flex gap-2">
               <div className="flex-1 neumorphic-inset-well rounded-xl border border-slate-300/80 dark:border-slate-700/80 px-3 py-1.5 flex items-center transition-all focus-within:ring-2 focus-within:ring-indigo-500/50">
                 <input
                   id="queue-title-input"
                   type="text"
-                  maxLength={140}
+                  maxLength={MAX_STORY_TITLE_LENGTH}
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Migrate Auth to OAuth2"
@@ -172,11 +192,11 @@ export function StoryQueueDrawer({
               <div className="text-center py-12 px-4">
                 <Layers className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  No queued stories yet
+                  No queued projects yet
                 </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  Add upcoming tickets here. They will be ready when you click
-                  Next Story.
+                  Add upcoming projects here. They will be ready when you click
+                  Next Project.
                 </p>
               </div>
             ) : (
@@ -190,7 +210,10 @@ export function StoryQueueDrawer({
                       #{idx + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                      <p
+                        className="text-xs font-bold text-slate-800 dark:text-slate-200 break-words line-clamp-2"
+                        title={item.title}
+                      >
                         {item.title}
                       </p>
                       <p className="text-[10px] text-slate-400 dark:text-slate-500">
@@ -216,7 +239,7 @@ export function StoryQueueDrawer({
                         type="button"
                         onClick={() => onPromoteStory(item)}
                         className="p-1.5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg"
-                        title="Size this story now"
+                        title="Size this project now"
                       >
                         <Play className="w-3.5 h-3.5" />
                       </button>
@@ -238,11 +261,11 @@ export function StoryQueueDrawer({
             <div className="text-center py-12 px-4">
               <CheckCircle2 className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                No completed stories yet
+                No completed projects yet
               </p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                 Finished estimates will show up here as you advance through
-                stories.
+                projects.
               </p>
             </div>
           ) : (
@@ -252,7 +275,10 @@ export function StoryQueueDrawer({
                 className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                  <p
+                    className="text-xs font-bold text-slate-800 dark:text-slate-200 break-words line-clamp-2"
+                    title={story.title}
+                  >
                     {story.title}
                   </p>
                   <p className="text-[10px] text-slate-400 dark:text-slate-500">

@@ -10,13 +10,14 @@ BlindScrum is a sprint estimation tool built on Next.js 16 (App Router), React 1
 
 - **In-Memory Rooms**: Rooms use clean alphanumeric codes (`SCRUM-492` or `BLND-92`). State stays in browser memory and direct WebRTC DataChannels.
 - **Direct Links**: Share links directly or pass a room code via URL (`?room=CODE` or `/room/[code]`).
-- **Story Pipeline**: See what you are sizing right now, what is up next, and the remaining backlog horizon. Includes a tactile neumorphic well with an embedded mic and a quick `+` ticket adder.
+- **Story Pipeline**: See what you are sizing right now, what is up next, and the remaining backlog horizon. Includes a tactile neumorphic well with an embedded mic and a quick `+` ticket adder. Clamped to 300 characters with live visual counter badges.
 - **Voice Story Input**: Uses the browser Web Speech API. Tap the mic in the story well, speak the ticket title, and it transcribes live and stops when you pause.
 - **Story Backlog Queue**: Manage, reorder, and review completed tickets in a slide-over drawer without pausing the active vote.
-- **Avatar-on-Card Table**: Each player sits directly as an interactive card. During voting, the card front shows their avatar, name, and live status pill ("Thinking..." or "Voted"). On reveal, cards 3D flip to show points with the avatar anchored at the top and consensus summaries.
+- **Avatar-on-Card Table**: Each player sits directly as an interactive card. During voting, the card front shows their avatar, name, and live status pill ("Voting..." or "Voted"). On reveal, cards 3D flip to show points with the avatar anchored at the top and consensus summaries.
 - **Secret Blind Voting**: Clients only broadcast `{ hasVoted: true }`. Card numbers stay on the voter's device until the host clicks reveal.
 - **Numeric Fibonacci Deck**: Pure numeric cards (`1, 2, 3, 5, 8, 13, 20`) with 3D tactile states and physical flip mechanics.
 - **Interactive Table Reactions**: Click another teammate's seat to throw playful real-time reactions (egg splatter, tomato burst, sleeping gas with Zzz, confetti cheers, or lightning zap) backed by procedural Web Audio sound synthesis.
+- **Smart Input Bounds**: 300-character story titles, 28-character persona names, and 16-character room codes with live progressive color counters (slate to amber to rose).
 - **Vote Breakdown**:
   - Horizontal bar chart of vote frequencies
   - Summary cards for average, consensus pick, and spread
@@ -94,6 +95,7 @@ blindscrum/
 │       │   └── utils/
 │       │       ├── analytics.ts           # Mean, mode, consensus %, and spread calculation
 │       │       ├── analytics.test.ts      # Vitest suite for analytics calculation
+│       │       ├── limits.test.ts         # Vitest suite for input limits & counters
 │       │       ├── persona.ts             # Moniker, avatar presets, and SVG generator
 │       │       ├── persona.test.ts        # Vitest suite for persona generator
 │       │       ├── roomCode.ts            # Room code generator, normalizer, and validator

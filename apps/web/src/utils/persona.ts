@@ -464,4 +464,3 @@ export const AVATAR_PRESETS: AvatarPreset[] = ARCHETYPES.map((arch, idx) => {
     avatar: renderAvatarSvg(arch.id, palette.id),
   };
 });
-

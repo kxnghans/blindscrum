@@ -56,7 +56,7 @@ export function FibonacciDeck({
                     : "bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 text-slate-800 dark:text-slate-200 hover:-translate-y-2 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/15"
               }`}
               aria-pressed={isSelected}
-              aria-label={`Estimate ${val} story points`}
+              aria-label={`Estimate ${val} project points`}
             >
               {/* Corner Value Mini */}
               <span

@@ -17,16 +17,16 @@ BlindScrum is a Turborepo monorepo with a single web package:
 
 ### 2.1 Landing Route (`apps/web/src/app/page.tsx`)
 
-- **Start or Join:** Generates an alphanumeric room code (e.g. `SCRUM-492`) or accepts an existing code.
+- **Start or Join:** Generates an alphanumeric room code (e.g. `SCRUM-492`) or accepts an existing code (capped at 16 characters via `MAX_ROOM_CODE_LENGTH = 16`).
 - **Link Query Handling:** Uses Next.js `useSearchParams()` inside `<Suspense>` to check for `?room=CODE` or `?code=CODE`. If valid, it redirects straight into the room.
-- **Zero-Friction Landing:** Minimalist landing page with punchy tagline (*"Manage your stories. Estimate without bias."*) and feature highlights. Profile customization is cleanly deferred to the in-room onboarding modal.
+- **Zero-Friction Landing:** Minimalist landing page with punchy tagline (_"Manage your stories. Estimate without bias."_) and feature highlights. Profile customization is cleanly deferred to the in-room onboarding modal.
 
 ### 2.2 Room Route (`apps/web/src/app/room/[code]/page.tsx`)
 
 - **Dynamic Param:** Resolves `params.code` with React 19 `use()`.
-- **Identity Onboarding:** If the user has not configured their name, opens the onboarding modal on mount so they can type their name or click "Randomize" for an instant agile persona.
+- **Identity Onboarding:** If the user has not configured their name, opens the onboarding modal on mount so they can type their name (capped at 28 characters via `MAX_PERSONA_NAME_LENGTH = 28` with live counter) or click "Randomize" for an instant agile persona.
 - **Session Init:** Connects to the room channel via `useScrumSession`.
-- **Arena Layout:** Houses the unified Story Pipeline (Now Sizing well with embedded mic, Up Next, Backlog Horizon, and inline `+` ticket well), Avatar-on-Card Poker Table with live voter indicators and 3D reveal flip, 3D Fibonacci Deck, and post-reveal Analytics Panel.
+- **Arena Layout:** Houses the unified Story Pipeline (Now Sizing well with embedded mic, Up Next, Backlog Horizon, and inline `+` ticket well, enforcing 300-character limits via `MAX_STORY_TITLE_LENGTH = 300` with progressive visual counter badges), Avatar-on-Card Poker Table with live voter indicators and 3D reveal flip, 3D Fibonacci Deck, and post-reveal Analytics Panel.
 
 ---
 

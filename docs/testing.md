@@ -52,6 +52,14 @@ export default defineConfig({
 - **SSR safety:** Returns `null` when invoked in Node.js server environments (`window === "undefined"`).
 - **Room normalization:** Normalizes room codes to lowercase alphanumeric-and-hyphen identifiers for Nostr room discovery.
 
+### 2.5 Smart Input Limits (`apps/web/src/utils/limits.test.ts`)
+
+- **Centralized Constants:** Verifies boundary limits for story titles (`MAX_STORY_TITLE_LENGTH = 300`), participant monikers (`MAX_PERSONA_NAME_LENGTH = 28`), and room codes (`MAX_ROOM_CODE_LENGTH = 16`).
+- **Story Title Truncation:** Confirms string slicing and whitespace trimming at 300 characters for both typing and speech dictation.
+- **Persona Moniker Clamping:** Ensures names are constrained to 28 characters across manual input and randomized presets.
+- **Room Code Normalization:** Verifies codes are clamped to 16 characters with strict uppercase and illegal character stripping.
+- **Counter Threshold Math:** Validates dynamic color transition logic (normal below 250, amber warning from 250 to 299, rose danger at 300).
+
 ---
 
 ## 3. Concurrency Checks
@@ -63,7 +71,7 @@ Before deploying, verify these multi-user interactions:
 3. **Host switch:** Close the host's tab. The second oldest participant should gain host controls automatically.
 4. **Queue sync:** Queue a story in a participant tab. It should immediately show up in the host's queue drawer and arena Up Next preview card.
 5. **Interactive reactions:** Click another participant's seat in tab A and select a throwable (e.g. egg or zap). Tabs B and C should see the projectile arc, impact splatter or lightning bolt, and hear the Web Audio sound.
-6. **Browser validation matrix:** Full cross-theme, responsive, and multi-session steps are documented in [docs/browser-test.md](./browser-test.md).
+6. **Browser validation matrix:** Full cross-theme, responsive, multi-session, and smart limit verification steps (29 automated test cases) are documented in [docs/browser-test.md](./browser-test.md) and audited via Chrome DevTools Protocol (CDP port 9222).
 
 ---
 
@@ -71,7 +79,7 @@ Before deploying, verify these multi-user interactions:
 
 | Command            | Action                   | Expected                            |
 | :----------------- | :----------------------- | :---------------------------------- |
-| `pnpm test`        | Run Vitest               | 13 tests passing across 4 files     |
+| `pnpm test`        | Run Vitest               | 19 tests passing across 5 files     |
 | `pnpm check-types` | TypeScript check         | 0 errors                            |
 | `pnpm lint`        | ESLint 9                 | 0 errors, 0 warnings                |
 | `pnpm build`       | Production Next.js build | Compiles cleanly for Vercel         |

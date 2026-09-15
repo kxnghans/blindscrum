@@ -28,7 +28,7 @@
 - **Vercel Deployment Pipeline**: Configured zero-config deployment on Vercel for Next.js 16 App Router and Turbopack.
 - **Lint & Typecheck**: Verified zero TypeScript errors and zero ESLint errors across the repository.
 - **Git Remote Push**: Pushed the main branch to `git@github.com:kxnghans/blindscrum.git`.
-- **Technical Documentation**: Completed comprehensive documentation suite covering architecture, PRD, backend, theme, testing, browser validation, and security review.
+- **Technical Documentation**: Wrote documentation covering architecture, PRD, backend, theme, testing, browser validation, and security review in `/docs/`.
 
 ---
 
@@ -111,10 +111,34 @@
   - Streamline inline queue adder with an embedded circular `+` action button, eliminating competing labeled "Queue" buttons.
   - Polish layout hierarchy so header remains the sole prominent `Queue (N)` drawer button and pipeline tray links cleanly via `View Backlog →`.
 - [x] **Task 19: Avatar-on-Card Architecture & 3D Reveal Flip Polish**
-  - Seat participant avatars and names directly on the card face during voting with dynamic "Thinking..." / "Voted" status pills.
+  - Seat participant avatars and names directly on the card face during voting with dynamic "Voting..." / "Voted" status pills.
   - Animate avatars gracefully to an anchored top badge on 3D card flip (`rotate-y-180`) upon vote reveal.
   - Display clear numeric estimate values in the card center with consensus highlight borders and outlier tags.
 - [x] **Task 20: Full Stability Suite, VizTest Audit & Git Sync**
   - Run `pnpm check-types`, `pnpm lint`, `pnpm test`, and `pnpm build`.
   - Conduct Chrome automation visual audit across responsive viewports.
   - Commit and push to `origin/main` and `origin/qa`.
+- [x] **Task 21: Single-Input Pipeline, Table Spacing & Analytics Simplification**
+  - Consolidate `StoryPipeline.tsx` to a single progressive input (State A: set active project with mic & Set button; State B: active project display card with Edit toggle + inline queue input with mic and + button).
+  - Open queue input to all participants (host and guests alike).
+  - Support multi-word project titles (up to 15 words) in "Up Next" with responsive wrapping (`break-words line-clamp-2`).
+  - Rename "View Backlog →" to `View Queue (${queue.length}) →` and standardize terminology from tickets/stories to projects across all arena and drawer components.
+  - Remove redundant Queue button from `RoomHeader.tsx`.
+  - Consolidate PokerTable vertical controls: place "Votes revealed" status and "Revote" / "Next Project" buttons side-by-side with tight spacing (`p-4 sm:p-6 md:p-8`, `my-4 sm:my-6`).
+  - Simplify `AnalyticsPanel.tsx`: remove redundant project title subtitle, display total votes in header, simplify metric cards (Majority/Consensus, Average, refined Spread), and eliminate verbose card subtitles.
+  - Verify with strict TypeScript (`tsc --noEmit`), ESLint 9 (0 warnings), unit tests (15/15 passed), Next.js production build, and CDP visual tests across desktop and mobile.
+- [x] **Task 22: Smart Input Limits & Progressive Tactile Counters**
+  - Define centralized constants in `apps/web/src/types/scrum.ts`: `MAX_STORY_TITLE_LENGTH = 300`, `MAX_PERSONA_NAME_LENGTH = 28`, `MAX_ROOM_CODE_LENGTH = 16`.
+  - Add live tactile character count indicators (`X/300`, `X/28`) across `StoryPipeline.tsx`, `StoryQueueDrawer.tsx`, and `UserProfileModal.tsx`.
+  - Implement progressive color transitions: muted slate for normal count, amber warning at $\ge 250$ chars, and bold rose danger at $\ge 300$ chars.
+  - Implement 3-line clamping (`line-clamp-3`) and word-break wrapping for long titles in `StoryPipeline.tsx`.
+  - Enforce bounds validation and string slicing in `useScrumSession.ts` and `useVoiceSearch.ts`.
+  - Add unit test suite `apps/web/src/utils/limits.test.ts` verifying limits, normalization, and threshold calculations.
+- [x] **Task 23: Vercel Main Branch Watch Filter**
+  - Create root `vercel.json` with `git.deploymentEnabled: { "main": true, "*": false }`.
+  - Implement shell build ignore script (`ignoreCommand: "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"main\" ]; then exit 1; else exit 0; fi"`) to ensure non-main branches (feature, chore, qa) are skipped by Vercel build containers.
+  - Verify configuration in `docs/backend.md` and `docs/PRD.md`.
+- [x] **Task 24: Poker Table Card Status Semantic Polish**
+  - Update unrevealed participant card status pill in `apps/web/src/components/arena/PokerTable.tsx` from `"Thinking..."` to `"Voting..."` with animated spinning clock icon.
+  - Retain emerald `"Voted"` status with check badge once card selection is committed.
+  - Update browser test matrix in `docs/browser-test.md` (Test Case 19) and verify via CDP visual tests across desktop, tablet, and mobile viewports.
