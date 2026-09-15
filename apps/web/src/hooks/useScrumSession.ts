@@ -77,9 +77,7 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
   });
 
   // Ephemeral Room State
-  const [storyTitle, setStoryTitleState] = useState<string>(
-    "Sprint Feature Sizing",
-  );
+  const [storyTitle, setStoryTitleState] = useState<string>("");
   const [status, setStatus] = useState<RoundStatus>("IDLE");
   const [participants, setParticipants] = useState<Participant[]>(() => [
     currentUser,
@@ -200,6 +198,9 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
       switch (event.type) {
         case "UPDATE_TITLE":
           setStoryTitleState(event.payload.title);
+          setStatus((prev) =>
+            prev === "IDLE" && event.payload.title.trim() ? "VOTING" : prev,
+          );
           break;
 
         case "CAST_BLIND_VOTE":
@@ -544,6 +545,9 @@ export function useScrumSession({ roomCode }: UseScrumSessionOptions) {
     (newTitle: string) => {
       const sanitized = newTitle.slice(0, MAX_STORY_TITLE_LENGTH);
       setStoryTitleState(sanitized);
+      setStatus((prev) =>
+        prev === "IDLE" && sanitized.trim() ? "VOTING" : prev,
+      );
       broadcast({ type: "UPDATE_TITLE", payload: { title: sanitized } });
     },
     [broadcast],

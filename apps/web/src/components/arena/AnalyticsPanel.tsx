@@ -53,7 +53,7 @@ export function AnalyticsPanel({
 
   const handleCopyMarkdown = async () => {
     const lines = [
-      `### BlindScrum: ${storyTitle}`,
+      `### BlindScrum: ${storyTitle || "Project Sizing"}`,
       isTie
         ? `- **Tied Decision**: ${modes.join(" & ")} pts (${modeCount} votes each)`
         : `- **Consensus**: ${mode ?? "N/A"} pts (${modeCount} votes, ${modePercentage}%)`,

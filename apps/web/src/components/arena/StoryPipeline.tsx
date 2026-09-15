@@ -90,7 +90,9 @@ export function StoryPipeline({
     }
     onUpdateTitle(currentInputValue.trim());
     setIsEditingCurrent(false);
-    toast.success("Active project updated.");
+    toast.success(
+      isEditingCurrent ? "Active project updated." : "Project sizing started.",
+    );
   };
 
   const handleCancelEditing = () => {
@@ -130,7 +132,11 @@ export function StoryPipeline({
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                  {isEditingCurrent ? "Edit Project" : "Now Sizing"}
+                  {isEditingCurrent
+                    ? "Edit Project"
+                    : !hasActiveTitle
+                      ? "Enter Project"
+                      : "Now Sizing"}
                 </span>
 
                 {showVisualCues && (
@@ -143,7 +149,9 @@ export function StoryPipeline({
 
               <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
                 {isHost
-                  ? "Enter project title or speak into microphone"
+                  ? isEditingCurrent
+                    ? "Update project title or speak into microphone"
+                    : "Enter project title to start sizing"
                   : "Waiting for host to set active project..."}
               </span>
             </div>
@@ -169,7 +177,9 @@ export function StoryPipeline({
                 }`}
                 placeholder={
                   isHost
-                    ? "Enter project title or speak with mic..."
+                    ? isEditingCurrent
+                      ? "Enter project title or speak with mic..."
+                      : "Enter project title to start sizing..."
                     : "Waiting for host to set project..."
                 }
               />
@@ -287,7 +297,7 @@ export function StoryPipeline({
             <div className="w-full md:w-80 shrink-0 space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Queue project for later
+                  Queue project
                 </span>
                 {showVisualCues && (
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 animate-pulse">
@@ -332,7 +342,7 @@ export function StoryPipeline({
                   maxLength={MAX_STORY_TITLE_LENGTH}
                   value={quickQueueText}
                   onChange={(e) => setQuickQueueText(e.target.value)}
-                  placeholder="Queue project for later or speak..."
+                  placeholder="Queue project or speak..."
                   className="flex-1 min-w-0 bg-transparent text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
                 />
 
@@ -401,7 +411,7 @@ export function StoryPipeline({
             </div>
           ) : (
             <span className="text-slate-400 dark:text-slate-500 italic">
-              No projects queued. Anyone can queue a project above.
+              No projects queued yet.
             </span>
           )}
         </div>
